@@ -1,0 +1,214 @@
+<?php
+
+use Livewire\Component;
+use Livewire\Attributes\On; 
+use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
+
+use App\Models\category;
+use App\Models\product;
+
+use Illuminate\Support\Facades\Storage;
+
+new class extends Component
+{
+    use WithPagination;
+
+    public $categories;
+    #[on('product-updated')]
+    public function mount(){
+        $this->message = "";
+        $this->create = false;
+        $this->categories = category::latest()->get();
+    }
+
+    public $selectedCategory = "";
+    public string $search = "";
+    #[Computed]
+    public function categorys(){
+        return Category::latest()
+            // 1. Filter categories by selected category name
+            ->where('name', 'like', "%{$this->selectedCategory}%")
+
+            // 2. Filter categories to only those containing matching products
+            ->when($this->search, function($query) {
+                $query->whereHas('product', function($q) {
+                    $q->where(function($innerQuery) {
+                        $innerQuery->where('name', 'like', "%{$this->search}%")
+                                   ->orWhere('slug', 'like', "%{$this->search}%");
+                    });
+                });
+            })
+
+            // 3. FIX: Filter the actual loaded products to ONLY show matching ones
+            ->with(['product' => function($q) {
+                $q->when($this->search, function($query) {
+                    $query->where(function($innerQuery) {
+                        $innerQuery->where('name', 'like', "%{$this->search}%")
+                                   ->orWhere('slug', 'like', "%{$this->search}%");
+                    });
+                });
+            }])
+            ->paginate(10);
+    }
+    
+    public string $message;
+    #[on('send-message')]
+    public function handleMessage($message){
+        $this->message = $message;
+    }
+    
+    public $edit_id;
+    public bool $create;
+    public function showCreate($id = ""){
+        $this->edit_id = $id;
+        $this->create = !$this->create;
+    }
+
+    public function delete($id){
+        $product = product::where('id', $id)->first();
+        $images = $product->images()->get();
+        
+        foreach($images as $image){
+            if(Storage::disk('public')->exists($image['image']))
+                Storage::disk('public')->delete($image['image']);
+            
+        }
+
+        product::where('id', $id)->delete();
+        $this->message = "Product Deleted Successfully";
+    }
+};
+?>
+
+<div class="relative h-full w-full flex flex-col gap-5 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-5">
+    @if($create)
+        <livewire:admin.product.create :edit_id="$edit_id" :categories="$categories" />
+    @else
+
+    @if($message)
+    <div 
+        x-data="{ show: true }" 
+        x-init="setTimeout(() => show = false, 5000)" 
+        x-show="show"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-300"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-4"
+        class="fixed bottom-5 right-5 z-50 max-w-sm"
+    >
+        <div class="flex flex-row items-center justify-between gap-4 rounded-xl border border-indigo-100 bg-indigo-50 p-4 shadow-lg shadow-indigo-100/40 dark:border-indigo-950 dark:bg-indigo-950/50 dark:shadow-none">
+            <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse shrink-0"></span>
+                <p class="text-sm font-medium text-indigo-900 dark:text-indigo-200">
+                    {{$message}}
+                </p>
+            </div>
+    
+            <button 
+                @click="show = false" 
+                class="rounded-lg p-1 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/50 dark:hover:text-indigo-200 transition-colors duration-200 focus:outline-none"
+                aria-label="Close notification"
+            >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    @endif
+
+    <div class="flex flex-row justify-between rounded-xl border border-neutral-200 dark:border-neutral-700">
+       <div class="grid grid-cols-2 gap-3">
+           <flux:input wire:model.live="search" name="Search" type="text" placeholder="Search Products..."/>
+           <flux:select required name="selectedCategory" wire:model.live="selectedCategory" placeholder="Choose Category...">
+                <flux:select.option value="">All Categorys</flux:select.option>
+                @foreach($categories as $category)
+                    <flux:select.option value="{{$category['name']}}">{{$category['name']}}</flux:select.option>
+                @endforeach
+            </flux:select>
+            <flux:error name="category_id" />
+       </div>
+
+        <flux:button wire:click="showCreate" variant="primary" type="button" class="" data-test="Add-button">
+                {{ __('Add') }}
+        </flux:button>
+    </div>
+
+    <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-2">
+        <flux:table scrollable :paginate="$this->categorys">
+            <flux:table.columns>
+                <flux:table.column sticky class="bg-white dark:bg-zinc-900">Category</flux:table.column>
+                <flux:table.column>Product Name</flux:table.column>
+                <flux:table.column>Slug</flux:table.column>
+                <flux:table.column style="max-width: 300px;">description</flux:table.column>
+                <flux:table.column>price</flux:table.column>
+                <flux:table.column>stock</flux:table.column>
+                <flux:table.column>sku</flux:table.column>
+                <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Image Url</flux:table.column>
+                <flux:table.column>Remove</flux:table.column>
+                <flux:table.column>Update</flux:table.column>
+            </flux:table.columns>
+
+            <flux:table.rows>
+                @foreach($this->categorys as $category)
+                @foreach($category['product'] as $product)
+                <!-- FIX 1: We use a top border on the row ONLY when a new category group starts -->
+                <flux:table.row class="{{ $loop->first ? 'border-t border-neutral-200 dark:border-neutral-200' : 'border-t-0' }}">
+                    
+                    <!-- 1. Category Column (FIX 2: Removed rowspan entirely so columns don't shift layout) -->
+                    <flux:table.cell 
+                        sticky 
+                        class="bg-white dark:bg-zinc-900 border-r border-neutral-200 dark:border-neutral-700 font-bold text-neutral-800 dark:text-neutral-200 whitespace-nowrap px-4 text-center"
+                    >
+                        <!-- FIX 3: Text only renders on the first row, leaving it empty but structurally aligned for rows 2 & 3 -->
+                        @if($loop->first)
+                            {{ $category['name'] }}
+                        @endif
+                    </flux:table.cell>
+
+                    <!-- 2. Product Name Column -->
+                    <flux:table.cell class="whitespace-nowrap">{{$product['name']}}</flux:table.cell>
+                    
+                    <!-- Remaining Columns -->
+                    <flux:table.cell class="whitespace-nowrap">{{$product['slug']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-normal">{{$product['description']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap">{{$product['price']}}</flux:table.cell>
+                    <flux:table.cell>{{$product['stock']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap">{{$product['sku']}}</flux:table.cell>
+                    
+                    @if($product['is_active'])
+                    <flux:table.cell><flux:badge color="green" size="sm" inset="top bottom">Active</flux:badge></flux:table.cell>
+                    @else
+                    <flux:table.cell><flux:badge color="zinc" size="sm" inset="top bottom">Inactive</flux:badge></flux:table.cell>
+                    @endif
+
+                    @if($product['images'])
+                        <flux:table.cell variant="strong" class="whitespace-nowrap">
+                            <div class="grid grid-cols-4 gap-2">
+                            @foreach($product['images'] as $image)
+                                <img src="{{asset('storage/'.$image['image'])}}" alt="noimage">
+                            @endforeach
+                            </div>
+                        </flux:table.cell>
+                    @else
+                        <flux:table.cell variant="strong">NULL</flux:table.cell>
+                    @endif
+                    
+                    <flux:table.cell variant="strong">
+                        <flux:button wire:click="delete({{$product['id']}})" variant="danger" size="sm">Delete</flux:button>
+                    </flux:table.cell>
+                    <flux:table.cell variant="strong">
+                        <flux:button wire:click="showCreate({{$product['id']}})" variant="primary" color="blue" size="sm">Edit</flux:button>
+                    </flux:table.cell>
+                </flux:table.row>
+                @endforeach
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
+    </div>
+    @endif
+</div>
