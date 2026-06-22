@@ -3,49 +3,89 @@
 use Livewire\Component;
 use Livewire\Attributes\Validate;
 
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
+
 use App\Models\Category;
 
 new class extends Component
 {
+    use WithFileUploads;
     
-    #[Validate('required|min:3')]
     public string $title;
     public string $slug;
     public bool $active = true;
     
+    public $image;
+
+    public $image_path;
+    
     public $edit_id;
     public function mount(){
+
         if(!empty($this->edit_id)){
             $category = Category::where('id', $this->edit_id)->first();
             $this->title = $category['name'];
             $this->slug = $category['slug'];
+            $this->image_path = $category['image'];
             $this->active = $category['is_active'];
         }
     }
 
     public function save(){
-        $this->validate();
 
         if(empty($this->slug)){
             $this->slug = $this->title;
         }
 
+        $path = "not set";
+
+        if(!empty($this->image)){
+            $path = $this->image->store(
+                            'category',
+                            'public'
+                        );
+        }
+
         if(empty($this->edit_id)){
+            $this->validate([
+                'title' => 'required|min:3',
+                'image' => 'required',
+            ]);
+
             Category::create([
                 "name" => $this->title,
                 "slug" => $this->slug,
+                "image" => $path,
                 "is_active" => $this->active,
             ]);
 
             $this->dispatch("category-updated");
             $this->dispatch("send-message", message:"Category Created Successfully");
         }else{
+            $this->validate([
+                'title' => 'required|min:3',
+            ]);
+
+            $path = Category::where('id', $this->edit_id)->value('image');
+
+            if(!empty($this->image)){
+                
+
+                $path = $this->image->store(
+                                'category',
+                                'public'
+                            );
+            }
+
             Category::where('id', $this->edit_id)->update([
                 "name" => $this->title,
                 "slug" => $this->slug,
+                "image" => $path,
                 "is_active" => $this->active,
             ]);
 
+            $this->reset(['title', 'slug', 'image']);
             $this->dispatch("category-updated");
             $this->dispatch("send-message", message:"Category Updated Successfully");
         }
@@ -88,7 +128,20 @@ new class extends Component
             <!-- Remember Me -->
             <flux:checkbox wire:model="active" name="active" :label="__('Activate')" :checked="old('active')" />
             
+            @if(!empty($image_path) && empty($image))
+                <img
+                    src="{{asset('storage/'.$image_path) }}"
+                    class="w-32 h-32 object-cover rounded"
+                >
+            @elseif(!empty($image))
+                <img
+                    src="{{ $image->temporaryUrl() }}"
+                    class="w-32 h-32 object-cover rounded"
+                >
+            @endif
+
             <flux:input
+                wire:model="image"
                 name="image"
                 :label="__('Category Image')"
                 type="file"

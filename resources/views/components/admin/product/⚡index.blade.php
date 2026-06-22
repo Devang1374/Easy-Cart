@@ -81,7 +81,7 @@ new class extends Component
 };
 ?>
 
-<div class="relative h-full w-full flex flex-col gap-5 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-5">
+<div class="relative h-full w-full flex flex-col gap-5 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-3">
     @if($create)
         <livewire:admin.product.create :edit_id="$edit_id" :categories="$categories" />
     @else
@@ -138,16 +138,17 @@ new class extends Component
     </div>
 
     <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-2">
-        <flux:table scrollable :paginate="$this->categorys">
-            <flux:table.columns>
+        <flux:table scrollable container:class="max-h-115" :paginate="$this->categorys">
+            <flux:table.columns sticky class="bg-white dark:bg-zinc-900">
                 <flux:table.column sticky class="bg-white dark:bg-zinc-900">Category</flux:table.column>
                 <flux:table.column>Product Name</flux:table.column>
                 <flux:table.column>Slug</flux:table.column>
-                <flux:table.column style="max-width: 300px;">description</flux:table.column>
+                <flux:table.column>description</flux:table.column>
                 <flux:table.column>price</flux:table.column>
                 <flux:table.column>stock</flux:table.column>
                 <flux:table.column>sku</flux:table.column>
                 <flux:table.column>Status</flux:table.column>
+                <flux:table.column>Featured</flux:table.column>
                 <flux:table.column>Image Url</flux:table.column>
                 <flux:table.column>Remove</flux:table.column>
                 <flux:table.column>Update</flux:table.column>
@@ -171,11 +172,11 @@ new class extends Component
                     </flux:table.cell>
 
                     <!-- 2. Product Name Column -->
-                    <flux:table.cell class="whitespace-nowrap">{{$product['name']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-normal min-w-40 max-w-50">{{$product['name']}}</flux:table.cell>
                     
                     <!-- Remaining Columns -->
                     <flux:table.cell class="whitespace-nowrap">{{$product['slug']}}</flux:table.cell>
-                    <flux:table.cell class="whitespace-normal">{{$product['description']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-normal min-w-60 max-w-70">{{$product['description']}}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">{{$product['price']}}</flux:table.cell>
                     <flux:table.cell>{{$product['stock']}}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">{{$product['sku']}}</flux:table.cell>
@@ -186,11 +187,17 @@ new class extends Component
                     <flux:table.cell><flux:badge color="zinc" size="sm" inset="top bottom">Inactive</flux:badge></flux:table.cell>
                     @endif
 
+                    @if($product['featured'])
+                    <flux:table.cell><flux:badge color="green" size="sm" inset="top bottom">Yes</flux:badge></flux:table.cell>
+                    @else
+                    <flux:table.cell><flux:badge color="zinc" size="sm" inset="top bottom">No</flux:badge></flux:table.cell>
+                    @endif
+
                     @if($product['images'])
-                        <flux:table.cell variant="strong" class="whitespace-nowrap">
-                            <div class="grid grid-cols-4 gap-2">
+                        <flux:table.cell variant="strong" class="whitespace-nowrap min-w-100">
+                            <div class="grid grid-cols-4 gap-5">
                             @foreach($product['images'] as $image)
-                                <img src="{{asset('storage/'.$image['image'])}}" alt="noimage">
+                                <img class="max-w-25 max-h-30" src="{{asset('storage/'.$image['image'])}}" alt="noimage">
                             @endforeach
                             </div>
                         </flux:table.cell>

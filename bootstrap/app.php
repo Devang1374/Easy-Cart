@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => AdminMiddleware::class
         ]);
+
+         $middleware->redirectTo(
+            guests: '/login',  // Where to send logged-out users
+            users: 'user/homePage'     // Where to send logged-in users (Change this to your page!)
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

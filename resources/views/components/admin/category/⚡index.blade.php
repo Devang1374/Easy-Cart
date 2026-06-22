@@ -101,7 +101,7 @@ new class extends Component
     </div>
 
     <div class="relative h-full flex flex-row justify-between overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-2">
-        <flux:table class="w-full" :paginate="$this->categories">
+        <flux:table scrollable container:class="w-full" :paginate="$this->categories">
             <flux:table.columns>
                 <flux:table.column>Name</flux:table.column>
                 <flux:table.column>Slug</flux:table.column>
@@ -123,7 +123,7 @@ new class extends Component
                     @endif
 
                     @if($category['image'])
-                        <flux:table.cell variant="strong">{{$category['image']}}</flux:table.cell>
+                        <flux:table.cell class="whitespace-normal" variant="strong">{{$category['image']}}</flux:table.cell>
                     @else
                         <flux:table.cell variant="strong">NULL</flux:table.cell>
                     @endif

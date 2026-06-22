@@ -18,6 +18,7 @@ class product extends Model
         'stock',
         'sku',
         'is_active',
+        'featured',
     ];
 
     protected function casts(): array
@@ -25,6 +26,7 @@ class product extends Model
         return [
             'price' => 'decimal:2',
             'is_active' => 'boolean',
+            'featured' => 'boolean',
         ];
     }
 

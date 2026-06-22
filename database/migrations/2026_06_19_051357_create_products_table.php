@@ -25,6 +25,7 @@ return new class extends Migration
             $table->integer('stock')->default(0);
             $table->string('sku')->unique();    
             $table->boolean('is_active')->default(true);
+            $table->boolean('featured')->default(false);
 
             $table->timestamps();
         });

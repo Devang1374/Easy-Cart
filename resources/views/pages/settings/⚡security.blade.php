@@ -320,8 +320,6 @@ new #[Title('Security settings')] class extends Component {
                             </div>
                         @endforelse
                     </div>
-
-                    <x-passkey-registration />
                 </div>
             </section>
         @endif

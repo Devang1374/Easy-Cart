@@ -21,6 +21,7 @@ new class extends Component
     public $stock;
     public string $sku;
     public bool $active = true;
+    public bool $featured = false;
 
     public $tamp;
 
@@ -40,6 +41,7 @@ new class extends Component
             $this->stock = $product['stock'];
             $this->sku = $product['sku'];
             $this->active = $product['is_active'];
+            $this->featured = $product['featured'];
 
             $images = $product->images()->get();
 
@@ -75,6 +77,7 @@ new class extends Component
             "stock" => $this->stock,
             "sku" => $this->sku,
             "is_active" => $this->active,
+            "featured" => $this->featured,
         ]);
 
         if(!empty($this->image_file)){    
@@ -132,6 +135,7 @@ new class extends Component
                 "stock" => $this->stock,
                 "sku" => $this->sku,
                 "is_active" => $this->active,
+                "featured" => $this->featured,
             ]); 
 
             $this->dispatch("product-updated");
@@ -222,9 +226,12 @@ new class extends Component
                 :placeholder="__('Product sku')"
             />
             
-            <!-- Remember Me -->
-            <flux:checkbox wire:model="active" name="active" :label="__('Activate')" :checked="old('active')" />
             
+            <div class="grid grid-cols-2 gap-5"> 
+                <flux:checkbox wire:model="active" name="active" :label="__('Activate')" :checked="old('active')" />
+                <flux:checkbox wire:model="featured" name="featured" :label="__('Featured')" :checked="old('featured')" />
+            </div>
+
             @if(!empty($images) && !empty($edit_id) && empty($image_file))
                 <div class="grid grid-cols-4 gap-4">
                     @foreach($images as $image)
