@@ -17,7 +17,24 @@ class UserController extends Controller
     public function productDetails($slug){
         return view('front.productDetail', ['slug' => "$slug"]);
     }
+
     public function category(){
         return view('front.category');
+    }
+
+    public function cart(){
+        return view('front.cart');
+    }
+
+    public function order(){
+        return view('front.order');
+    }
+
+    public function checkout(?string $order_id = null){
+        return view('front.checkout', ['order_id' => $order_id]);
+    }
+
+    public function orderSuccess($order_id){
+        return view('front.order-success', ['order_id' => $order_id]);
     }
 }

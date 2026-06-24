@@ -35,8 +35,14 @@
                         Products
                     </a>
 
-                    <a wire:navigate href="{{route('user/category')}}" class="@if(request()->routeIs('user/category')) text-blue-700 @endif font-medium hover:text-blue-600">
-                        Categories
+                    @auth
+                        <a wire:navigate href="{{route('user/order')}}" class="@if(request()->routeIs('user/order')) text-blue-700 @endif font-medium hover:text-blue-600">
+                            My Order
+                        </a>
+                    @endauth
+
+                    <a wire:navigate href="{{route('user/cart')}}" class="@if(request()->routeIs('user/cart')) text-blue-700 @endif font-medium hover:text-blue-600">
+                        Cart
                     </a>
                 </nav>
 
@@ -53,21 +59,23 @@
 
                     {{-- Theme Toggle --}}
                     <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" aria-label="Toggle dark mode" />
-
+                    @php 
+                        
+                    @endphp
                     {{-- Cart --}}
-                    <flux:button
-                        variant="ghost"
-                        size="sm"
-                        icon="shopping-bag"
-                    >
-                        <span class="hidden sm:inline">
-                            Cart
-                        </span>
+                    <a href="{{route('user/cart')}}">
+                        <flux:button
+                            variant="ghost"
+                            size="sm"
+                            icon="shopping-bag"
+                        >
+                            <span class="hidden sm:inline">
+                                Cart
+                            </span>
 
-                        <span class="rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white">
-                            0
-                        </span>
-                    </flux:button>
+                            <livewire:front.cart-count/>
+                        </flux:button>
+                    </a>
 
                     @auth
                          <x-desktop-user-menu />

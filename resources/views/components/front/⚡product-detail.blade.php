@@ -53,10 +53,61 @@ new class extends Component
             $this->quantity--;
         }
     }
+
+    public function addToCart()
+    {
+        $cart = session()->get('cart', []);
+
+        $currentQty = $cart[$this->product->id]['quantity'] ?? 0;
+
+        $newQty = $currentQty + $this->quantity;
+
+        if ($newQty > $this->product->stock) {
+            // Later replace with Flux toast
+            Flux::toast(
+                variant: 'danger',
+                heading: 'Stock Limit Reached',
+                text: "Only {$this->product->stock} items available. You alread have $currentQty in Your Cart."
+            );
+            
+            return;
+        }
+
+        if (isset($cart[$this->product->id])) {
+
+            $cart[$this->product->id]['quantity'] = $newQty;
+
+        } else {
+
+            $cart[$this->product->id] = [
+                'id'       => $this->product->id,
+                'name'     => $this->product->name,
+                'slug'     => $this->product->slug,
+                'price'    => $this->product->price,
+                'quantity' => $this->quantity,
+                'image'    => $this->product->images->first()?->image,
+                'stock'    => $this->product->stock
+            ];
+
+        }
+
+        session()->put('cart', $cart);
+        $this->dispatch('cart-updated');
+
+        Flux::toast(
+            heading: 'Success',
+            text: 'Product added to cart.'
+        );
+    }
 };
 ?>
 
 <div class="mx-auto max-w-7xl px-6 py-12">
+    @persist('toast')
+        <flux:toast.group>
+            <flux:toast />
+        </flux:toast.group>
+    @endpersist
 
     <div class="grid gap-10 lg:grid-cols-2">
 
@@ -166,13 +217,27 @@ new class extends Component
 
                 <div class="mt-8">
                     <flux:button
+                        wire:click="addToCart"
+                        :disabled="$product->stock <= 0"
                         variant="primary"
                         class="w-full"
                     >
-                        Add To Cart
+                        {{ $product->stock > 0 ? 'Add To Cart' : 'Out Of Stock' }}
                     </flux:button>
                 </div>
 
+                <a
+                    wire:navigate
+                    href="{{ route('user/product') }}"
+                    class="mt-3 block"
+                >
+                    <flux:button
+                        variant="ghost"
+                        class="w-full"
+                    >
+                        Continue Shopping
+                    </flux:button>
+                </a>
             </div>
         </div>
 

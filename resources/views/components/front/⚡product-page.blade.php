@@ -180,6 +180,7 @@ new class extends Component
                 <a
                         href="{{ route('user/productDetails', $product->slug) }}"
                         class="group block"
+                        wire:navigate
                     >      
                     <div class="group overflow-hidden rounded-3xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
                         {{-- Image --}}
