@@ -10,8 +10,8 @@ class UserController extends Controller
         return view('front.homePage');
     }
 
-    public function product(){
-        return view('front.product');
+    public function product(?string $category = null){
+        return view('front.product', ['category' => "$category"]);
     }
 
     public function productDetails($slug){

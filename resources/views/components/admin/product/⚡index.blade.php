@@ -66,6 +66,10 @@ new class extends Component
     }
 
     public function delete($id){
+        if(!auth()->user()->is_admin){
+            return;
+        }
+        
         $product = product::where('id', $id)->first();
         $images = $product->images()->get();
         
@@ -81,7 +85,7 @@ new class extends Component
 };
 ?>
 
-<div class="relative h-full w-full flex flex-col gap-5 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-3">
+<div class="relative w-full flex flex-col gap-5 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 md:p-5">
     @if($create)
         <livewire:admin.product.create :edit_id="$edit_id" :categories="$categories" />
     @else
@@ -97,7 +101,7 @@ new class extends Component
         x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 translate-y-4"
-        class="fixed bottom-5 right-5 z-50 max-w-sm"
+        class="fixed bottom-5 right-5 z-50 max-w-sm w-[calc(100%-2.5rem)]"
     >
         <div class="flex flex-row items-center justify-between gap-4 rounded-xl border border-indigo-100 bg-indigo-50 p-4 shadow-lg shadow-indigo-100/40 dark:border-indigo-950 dark:bg-indigo-950/50 dark:shadow-none">
             <div class="flex items-center gap-2">
@@ -120,36 +124,36 @@ new class extends Component
     </div>
     @endif
 
-    <div class="flex flex-row justify-between rounded-xl border border-neutral-200 dark:border-neutral-700">
-       <div class="grid grid-cols-2 gap-3">
-           <flux:input wire:model.live="search" name="Search" type="text" placeholder="Search Products..."/>
-           <flux:select required name="selectedCategory" wire:model.live="selectedCategory" placeholder="Choose Category...">
-                <flux:select.option value="">All Categorys</flux:select.option>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="grid grid-cols-1 gap-3 w-full sm:grid-cols-2 sm:max-w-xl">
+            <flux:input wire:model.live="search" name="Search" type="text" placeholder="Search Products..." class="w-full"/>
+            <flux:select required name="selectedCategory" wire:model.live="selectedCategory" placeholder="Choose Category..." class="w-full">
+                <flux:select.option value="">All Categories</flux:select.option>
                 @foreach($categories as $category)
                     <flux:select.option value="{{$category['name']}}">{{$category['name']}}</flux:select.option>
                 @endforeach
             </flux:select>
             <flux:error name="category_id" />
-       </div>
+        </div>
 
-        <flux:button wire:click="showCreate" variant="primary" type="button" class="" data-test="Add-button">
-                {{ __('Add') }}
+        <flux:button wire:click="showCreate" variant="primary" type="button" class="w-full sm:w-auto shrink-0" data-test="Add-button">
+            {{ __('Add') }}
         </flux:button>
     </div>
 
-    <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-2">
-        <flux:table scrollable container:class="max-h-115" :paginate="$this->categorys">
+    <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-2 overflow-hidden">
+        <flux:table scrollable container:class="max-h-115 w-full" :paginate="$this->categorys">
             <flux:table.columns sticky class="bg-white dark:bg-zinc-900">
-                <flux:table.column sticky class="bg-white dark:bg-zinc-900">Category</flux:table.column>
-                <flux:table.column>Product Name</flux:table.column>
+                <flux:table.column>Category</flux:table.column>
+                <flux:table.column sticky>Product Name</flux:table.column>
                 <flux:table.column>Slug</flux:table.column>
-                <flux:table.column>description</flux:table.column>
-                <flux:table.column>price</flux:table.column>
-                <flux:table.column>stock</flux:table.column>
-                <flux:table.column>sku</flux:table.column>
+                <flux:table.column>Description</flux:table.column>
+                <flux:table.column>Price</flux:table.column>
+                <flux:table.column>Stock</flux:table.column>
+                <flux:table.column>SKU</flux:table.column>
                 <flux:table.column>Status</flux:table.column>
                 <flux:table.column>Featured</flux:table.column>
-                <flux:table.column>Image Url</flux:table.column>
+                <flux:table.column>Images</flux:table.column>
                 <flux:table.column>Remove</flux:table.column>
                 <flux:table.column>Update</flux:table.column>
             </flux:table.columns>
@@ -157,53 +161,47 @@ new class extends Component
             <flux:table.rows>
                 @foreach($this->categorys as $category)
                 @foreach($category['product'] as $product)
-                <!-- FIX 1: We use a top border on the row ONLY when a new category group starts -->
-                <flux:table.row class="{{ $loop->first ? 'border-t border-neutral-200 dark:border-neutral-200' : 'border-t-0' }}">
+                
+                <flux:table.row class="{{ $loop->first ? 'border-t border-neutral-200 dark:border-neutral-800' : 'border-t-0' }}">
                     
-                    <!-- 1. Category Column (FIX 2: Removed rowspan entirely so columns don't shift layout) -->
                     <flux:table.cell 
-                        sticky 
                         class="bg-white dark:bg-zinc-900 border-r border-neutral-200 dark:border-neutral-700 font-bold text-neutral-800 dark:text-neutral-200 whitespace-nowrap px-4 text-center"
                     >
-                        <!-- FIX 3: Text only renders on the first row, leaving it empty but structurally aligned for rows 2 & 3 -->
                         @if($loop->first)
                             {{ $category['name'] }}
                         @endif
                     </flux:table.cell>
 
-                    <!-- 2. Product Name Column -->
-                    <flux:table.cell class="whitespace-normal min-w-40 max-w-50">{{$product['name']}}</flux:table.cell>
-                    
-                    <!-- Remaining Columns -->
+                    <flux:table.cell sticky class="whitespace-normal min-w-40 max-w-50">{{$product['name']}}</flux:table.cell>
                     <flux:table.cell class="whitespace-nowrap">{{$product['slug']}}</flux:table.cell>
-                    <flux:table.cell class="whitespace-normal min-w-60 max-w-70">{{$product['description']}}</flux:table.cell>
-                    <flux:table.cell class="whitespace-nowrap">{{$product['price']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-normal min-w-60 max-w-70 text-sm">{{$product['description']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap font-medium">₹{{ number_format($product['price'], 2) }}</flux:table.cell>
                     <flux:table.cell>{{$product['stock']}}</flux:table.cell>
-                    <flux:table.cell class="whitespace-nowrap">{{$product['sku']}}</flux:table.cell>
+                    <flux:table.cell class="whitespace-nowrap text-xs font-mono">{{$product['sku']}}</flux:table.cell>
                     
-                    @if($product['is_active'])
-                    <flux:table.cell><flux:badge color="green" size="sm" inset="top bottom">Active</flux:badge></flux:table.cell>
-                    @else
-                    <flux:table.cell><flux:badge color="zinc" size="sm" inset="top bottom">Inactive</flux:badge></flux:table.cell>
-                    @endif
+                    <flux:table.cell>
+                        <flux:badge color="{{ $product['is_active'] ? 'green' : 'zinc' }}" size="sm" inset="top bottom">
+                            {{ $product['is_active'] ? 'Active' : 'Inactive' }}
+                        </flux:badge>
+                    </flux:table.cell>
 
-                    @if($product['featured'])
-                    <flux:table.cell><flux:badge color="green" size="sm" inset="top bottom">Yes</flux:badge></flux:table.cell>
-                    @else
-                    <flux:table.cell><flux:badge color="zinc" size="sm" inset="top bottom">No</flux:badge></flux:table.cell>
-                    @endif
+                    <flux:table.cell>
+                        <flux:badge color="{{ $product['featured'] ? 'green' : 'zinc' }}" size="sm" inset="top bottom">
+                            {{ $product['featured'] ? 'Yes' : 'No' }}
+                        </flux:badge>
+                    </flux:table.cell>
 
-                    @if($product['images'])
-                        <flux:table.cell variant="strong" class="whitespace-nowrap min-w-100">
-                            <div class="grid grid-cols-4 gap-5">
+                    <flux:table.cell variant="strong" class="whitespace-nowrap min-w-[200px]">
+                        @if(!empty($product['images']))
+                            <div class="flex flex-row gap-2 overflow-x-auto py-1">
                             @foreach($product['images'] as $image)
-                                <img class="max-w-25 max-h-30" src="{{asset('storage/'.$image['image'])}}" alt="noimage">
+                                <img class="h-12 w-12 rounded-lg border border-neutral-200 object-cover shrink-0 dark:border-neutral-700" src="{{asset('storage/'.$image['image'])}}" alt="product-image">
                             @endforeach
                             </div>
-                        </flux:table.cell>
-                    @else
-                        <flux:table.cell variant="strong">NULL</flux:table.cell>
-                    @endif
+                        @else
+                            <span class="text-zinc-400 text-xs">No Images</span>
+                        @endif
+                    </flux:table.cell>
                     
                     <flux:table.cell variant="strong">
                         <flux:button wire:click="delete({{$product['id']}})" variant="danger" size="sm">Delete</flux:button>

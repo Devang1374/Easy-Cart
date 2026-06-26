@@ -13,4 +13,12 @@ class AdminController extends Controller
     public function product(){
         return view('product');
     }
+
+    public function orderPage(){
+        return view('orderPage');
+    }
+
+    public function analytics(){
+        return view('analyticsPage');
+    }
 }

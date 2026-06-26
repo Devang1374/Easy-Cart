@@ -17,7 +17,7 @@ new class extends Component
     public string $title;
     public string $slug;
     public string $description;
-    public $price;
+    public float $price;
     public $stock;
     public string $sku;
     public bool $active = true;
@@ -37,7 +37,7 @@ new class extends Component
             $this->title = $product['name'];
             $this->slug = $product['slug'];
             $this->description = $product['description'];
-            $this->price = $product['price'];
+            $this->price = (float)$product['price'];
             $this->stock = $product['stock'];
             $this->sku = $product['sku'];
             $this->active = $product['is_active'];
@@ -52,6 +52,10 @@ new class extends Component
     }
 
     public function save(){
+        if(!auth()->user()->is_admin){
+            return;
+        }
+
         $this->validate([
             'category_id' => 'required',
             'title' => 'required|min:3',
@@ -139,7 +143,7 @@ new class extends Component
             ]); 
 
             $this->dispatch("product-updated");
-            $this->dispatch("send-message", message:"Product Save Successfully $this->tamp");
+            $this->dispatch("send-message", message:"Product Update Successfully");
         }
     }
 
@@ -203,6 +207,7 @@ new class extends Component
                     required
                     autocomplete="price"
                     :placeholder="__('Product price')"
+                    step="any"
                 />
                 
                 <flux:input

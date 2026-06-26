@@ -3,6 +3,8 @@
 use Livewire\Component;
 use App\Models\orderTable;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 new class extends Component
 {
     public $order_id;
@@ -73,8 +75,22 @@ new class extends Component
     }
 
     public function cancel(){
-        orderTable::where('id', $this->order['id'])->delete();
+        orderTable::where('id', $this->order['id'])->update([
+            'status' => "cancelled"
+        ]);
         return redirect()->route('user/product');
+    }
+
+    public function downloadInvoice()
+    {
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'order' => $this->order,
+        ]);
+
+        return response()->streamDownload(
+            fn () => print($pdf->output()),
+            'Invoice-' . $this->order->order_number . '.pdf'
+        );
     }
 };
 ?>
@@ -125,7 +141,15 @@ new class extends Component
                 <span class="text-sm text-zinc-500">Status</span>
 
                 <div class="font-semibold capitalize">
-                    {{ $order->status }}
+                    @if($order->status === "delivered")
+                        <span class="text-green-600 dark:text-green-400">
+                            Delivered
+                        </span>
+                    @else
+                        <span class="text-yellow-600 dark:text-yellow-400">
+                            {{$order->status}}
+                        </span>
+                    @endif
                 </div>
             </div>
 
@@ -133,7 +157,7 @@ new class extends Component
 
         <div class="mt-8 flex flex-wrap justify-center gap-3">
 
-            @if($order->pyment !== 'PAID')
+            @if($order->pyment !== 'PAID' && $order->status != "cancelled")
                 <flux:button wire:click="payNow">
                     Pay Now
                 </flux:button>
@@ -148,6 +172,13 @@ new class extends Component
                     Continue Shopping
                 </flux:button>
             </a>
+
+            <flux:button
+                variant="outline"
+                wire:click="downloadInvoice"
+            >
+                Download Invoice
+            </flux:button>
 
         </div>
 

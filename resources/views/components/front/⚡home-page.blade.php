@@ -87,7 +87,7 @@ new class extends Component
 
             @foreach($categories as $category)
                 <a
-                    href="#"
+                    href="{{route('user/product', ['category'=>$category['id']])}}"
                     class="group rounded-3xl border border-zinc-200 bg-white p-6 transition-all duration-300 hover:-translate-y-2 hover:border-blue-500/20 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
                 >
                     <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100 transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-50 dark:bg-zinc-800 dark:group-hover:bg-blue-950/30">

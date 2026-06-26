@@ -86,7 +86,6 @@ new class extends Component
                 'price'    => $this->product->price,
                 'quantity' => $this->quantity,
                 'image'    => $this->product->images->first()?->image,
-                'stock'    => $this->product->stock
             ];
 
         }

@@ -12,12 +12,18 @@ new class extends Component
     use WithPagination;
 
     public $categories;
+    public $category;
 
     public function mount()
     {
        $this->categories = Category::query()
         ->where('is_active', true)
         ->get();
+
+        if($this->category){
+            $this->selectedCategory = $this->category;
+            $this->loadProducts();
+        }
 
     }
     #[Computed]
@@ -157,6 +163,7 @@ new class extends Component
     </div>
 
     <section  id="products-grid" class="mx-auto max-w-7xl px-6 py-8">
+        <div wire:loading.remove wire:target="search,sort,page,selectCategory">
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             @if($products->isEmpty())
 
@@ -220,8 +227,50 @@ new class extends Component
                     </div>
                 </a>
             @endforeach
-            @endif
-            </div>
+            @endif    
+        </div>
+        </div>
+
+        <div
+            wire:loading
+            wire:target="search,sort,page"
+            class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+        >
+                    
+            @for ($i = 0; $i < 10; $i++)
+                    
+                <div class="overflow-hidden rounded-3xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                    
+                    {{-- Image --}}
+                    <div class="h-64 w-full animate-pulse bg-zinc-200 dark:bg-zinc-800"></div>
+                    
+                    {{-- Content --}}
+                    <div class="space-y-4 p-5">
+                    
+                        {{-- Category --}}
+                        <div class="h-3 w-20 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"></div>
+                    
+                        {{-- Product Name --}}
+                        <div class="h-5 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800"></div>
+                        <div class="h-5 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800"></div>
+                    
+                        {{-- Price + Stock --}}
+                        <div class="flex items-center justify-between pt-2">
+                    
+                            <div class="h-6 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800"></div>
+                    
+                            <div class="h-4 w-16 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800"></div>
+                    
+                        </div>
+                    
+                    </div>
+                    
+                </div>
+                    
+            @endfor
+                    
+        </div>
+
         <div class="mt-10">
             {{ $products->links(data: ['scrollTo' => '#products-grid']) }}
         </div>

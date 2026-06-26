@@ -4,6 +4,7 @@ use Livewire\Component;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\orderTable;
 
 new class extends Component
 {
@@ -16,6 +17,10 @@ new class extends Component
             'categories' => Category::count(),
             'active_products' => Product::where('is_active', true)->count(),
             'stock' => Product::sum('stock'),
+            'totalOrders' => orderTable::count(),
+            'pendingOrders' => orderTable::where('status','pending')->count(),
+            'processingOrders' => orderTable::where('status','processing')->count(),
+            'deliveredOrders' => orderTable::where('status','delivered')->count(),
         ];
 
          $this->recentProducts = Product::latest()
@@ -26,12 +31,10 @@ new class extends Component
 };
 ?>
 
-<div class="flex h-full w-full flex-1 flex-col gap-6 rounded-xl p-2 sm:p-0">
+<div class="flex w-full flex-col gap-6 rounded-xl p-2 sm:p-0">
     
-    <!-- Stats Cards Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
         
-        <!-- Total Products Card -->
         <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Products</span>
@@ -46,7 +49,6 @@ new class extends Component
             </div>
         </div>
 
-        <!-- Total Categories Card -->
         <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Categories</span>
@@ -61,7 +63,6 @@ new class extends Component
             </div>
         </div>
 
-        <!-- Active Products Card -->
         <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Active Products</span>
@@ -76,7 +77,6 @@ new class extends Component
             </div>
         </div>
 
-        <!-- Total Stock Card -->
         <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Stock</span>
@@ -90,46 +90,108 @@ new class extends Component
                 </p>
             </div>
         </div>
+
+        <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Orders</span>
+                <div class="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4 flex items-baseline gap-2">
+                <p class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                    {{ $stats['totalOrders'] }}
+                </p>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Pending Orders</span>
+                <div class="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4 flex items-baseline gap-2">
+                <p class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                    {{ $stats['pendingOrders'] }}
+                </p>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Orders In Processing</span>
+                <div class="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-3-6.7"/>
+                        <polyline points="21 3 21 9 15 9"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4 flex items-baseline gap-2">
+                <p class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                    {{ $stats['processingOrders'] }}
+                </p>
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Delivered Orders</span>
+                <div class="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4 flex items-baseline gap-2">
+                <p class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                    {{ $stats['deliveredOrders'] }}
+                </p>
+            </div>
+        </div>
     </div>
 
-    <!-- Table Container Card -->
     <div class="flex flex-col rounded-xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
-        <!-- Table Header (Since it's exactly 5 items, this adds a clean title) -->
         <div class="border-b border-zinc-100 p-5 dark:border-zinc-800">
             <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Recent Products</h2>
             <p class="text-xs text-zinc-500 dark:text-zinc-400">A detailed breakdown of your latest additions</p>
         </div>
         
-        <!-- Flux Table Wrapper -->
-        <div class="relative p-2 h-full flex-1 overflow-hidden">
-            <flux:table scrollable>
+        <div class="w-full overflow-x-auto p-2">
+            <flux:table scrollable container:class="w-full min-w-[600px]">
                 <flux:table.columns>
                     <flux:table.column sticky class="bg-white text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Product</flux:table.column>
-                    <flux:table.column sticky class="bg-white text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Category</flux:table.column>
-                    <flux:table.column sticky class="bg-white text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Price</flux:table.column>
-                    <flux:table.column sticky class="bg-white text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Stock</flux:table.column>
-                    <flux:table.column sticky class="bg-white text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">Status</flux:table.column>
+                    <flux:table.column class="text-zinc-600 dark:text-zinc-400">Category</flux:table.column>
+                    <flux:table.column class="text-zinc-600 dark:text-zinc-400">Price</flux:table.column>
+                    <flux:table.column class="text-zinc-600 dark:text-zinc-400">Stock</flux:table.column>
+                    <flux:table.column class="text-zinc-600 dark:text-zinc-400">Status</flux:table.column>
                 </flux:table.columns>
 
                 <flux:table.rows>
                     @foreach($recentProducts as $product)
                         <flux:table.row class="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
-                            <!-- Product Name Bolded -->
-                            <flux:table.cell class="whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-100">
+                            <flux:table.cell sticky class="bg-white dark:bg-zinc-900 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-100">
                                 {{ $product['name'] }}
                             </flux:table.cell>
                             
-                            <!-- Eager-loaded Category Optimization -->
                             <flux:table.cell class="whitespace-nowrap text-zinc-600 dark:text-zinc-300">
                                 {{ category::where('id', $product['category_id'])->value('name') ?? 'Uncategorized' }}
                             </flux:table.cell>
                             
-                            <!-- Price formatted cleanly -->
                             <flux:table.cell class="whitespace-nowrap font-mono text-zinc-700 dark:text-zinc-300">
                                 ${{ number_format($product['price'], 2) }}
                             </flux:table.cell>
                             
-                            <!-- Dynamic Stock badges depending on inventory levels -->
                             <flux:table.cell class="whitespace-nowrap text-zinc-600 dark:text-zinc-300">
                                 @if($product['stock'] == 0)
                                     <span class="text-red-600 dark:text-red-400 font-medium">Out of stock</span>
@@ -140,7 +202,6 @@ new class extends Component
                                 @endif
                             </flux:table.cell>
                             
-                            <!-- Cool pills/badges for Active status -->
                             <flux:table.cell class="whitespace-nowrap">
                                 @if($product['is_active'])
                                     <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">

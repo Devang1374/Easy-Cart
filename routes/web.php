@@ -10,6 +10,8 @@ Route::middleware(['auth', 'admin'])->group(function(){
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::get('product', [AdminController::class, 'product'])->name('product');
     Route::get('category', [AdminController::class, 'category'])->name('category');
+    Route::get('orderPage', [AdminController::class, 'orderPage'])->name('orderPage');
+    Route::get('analytics', [AdminController::class, 'analytics'])->name('analytics');
 });
 
 require __DIR__.'/settings.php';
@@ -25,6 +27,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::get('user/cart', [UserController::class, 'cart'])->name('user/cart');
 Route::get('user/homePage', [UserController::class, 'homePage'])->name('homePage');
-Route::get('user/product', [UserController::class, 'product'])->name('user/product');
+Route::get('user/product/{category?}', [UserController::class, 'product'])->name('user/product');
 Route::get('user/category', [UserController::class, 'category'])->name('user/category');
-Route::get('user/product/{slug}', [UserController::class, 'productDetails'])->name('user/productDetails');
+Route::get('user/productDetails/{slug}', [UserController::class, 'productDetails'])->name('user/productDetails');
+
+use App\Mail\notification;
+use Illuminate\Support\Facades\Mail;
+
+Route::get('/notification', function(){
+    Mail::to('yakshparmar123@email.com')
+        ->send(new notification());
+
+    return 'Sent';
+});

@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Component;
+use App\Models\product;
 
 new class extends Component
 {
@@ -25,7 +26,7 @@ new class extends Component
             return;
         }
     
-        if ($cart[$productId]['quantity'] >= $cart[$productId]['stock']) {
+        if ($cart[$productId]['quantity'] >= product::where('id', $productId)->value('stock')) {
     
             Flux::toast(
                 variant: 'danger',
@@ -120,15 +121,17 @@ new class extends Component
             $quantity = 1;
         }
 
-        if ($quantity > $cart[$productId]['stock']) {
+        $productQuntity = product::where('id', $productId)->value('stock');
+
+        if ($quantity > $productQuntity) {
 
             Flux::toast(
                 variant: 'danger',
                 heading: 'Stock Limit Reached',
-                text: "Only {$cart[$productId]['stock']} items available."
+                text: "Only {$productQuntity} items available."
             );
 
-            $quantity = $cart[$productId]['stock'];
+            return;
         }
 
         $cart[$productId]['quantity'] = $quantity;
@@ -198,9 +201,11 @@ new class extends Component
                 {{-- Cart Items --}}
                 <div class="lg:col-span-2">
                     <div class="space-y-4">
-                
                         @foreach($cart as $item)
 
+                            @php
+                                $stock = product::where('id', $item['id'])->value('stock');
+                            @endphp
                             <div class="rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
 
                                 <div class="flex flex-col gap-4 sm:flex-row">
@@ -250,10 +255,19 @@ new class extends Component
                                                         −
                                                     </button>
 
+                                                    @if($item['quantity'] > $stock)
+                                                        @php
+                                                            $item['quantity'] = $stock; 
+                                                            $cart[$item['id']]['quantity'] = $stock;
+                                                            session()->put('cart', $cart);
+                                                            $this->dispatch('cart-updated');
+                                                        @endphp
+                                                    @endif   
+
                                                     <input
                                                         type="number"
                                                         min="1"
-                                                        max="{{ $item['stock'] }}"
+                                                        max="{{ $stock }}"
                                                         value="{{ $item['quantity'] }}"
                                                         wire:change="updateQuantity({{ $item['id'] }}, $event.target.value)"
                                                         class="w-16 border-0 bg-transparent text-center focus:ring-0"
@@ -261,7 +275,7 @@ new class extends Component
 
                                                     <button
                                                         wire:click="increaseQuantity({{ $item['id'] }})"
-                                                        @disabled($item['quantity'] >= $item['stock'])
+                                                        @disabled($item['quantity'] >= $stock)
                                                         class="px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
                                                         +
@@ -269,7 +283,7 @@ new class extends Component
 
                                                 </div>
                                                 <p class="mt-2 text-xs text-zinc-500">
-                                                    {{ $item['stock'] }} available
+                                                    {{ $stock }} available
                                                 </p>
                                             </span>
 

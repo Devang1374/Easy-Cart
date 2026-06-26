@@ -8,6 +8,12 @@ use App\Models\product;
 
 use Illuminate\Support\Facades\DB;
 
+use Livewire\Attributes\On;  
+
+
+use App\Mail\OrderPlacedMail;
+use Illuminate\Support\Facades\Mail;
+
 new class extends Component
 {
     public string $first_name = '';
@@ -27,6 +33,7 @@ new class extends Component
 
     public $order_id;
 
+    #[on('product-update')]
     public function mount()
     {
         $user = auth()->user();
@@ -62,7 +69,6 @@ new class extends Component
                     'price'    => $product->price,
                     'quantity' => $item['quantity'],
                     'image'    => $product->images->first()?->image,
-                    'stock'    => $product->stock
                 ];
             }
         }
@@ -74,8 +80,18 @@ new class extends Component
 
     public function getCartTotalProperty()
     {
+        
         return collect($this->cart)
-            ->sum(fn ($item) => $item['price'] * $item['quantity']);
+            ->sum(function ($item) {
+                $productPrice = product::where('id', $item['id'])->value('price');
+                if($item['price'] != $productPrice){
+                    $item['price'] = $productPrice;
+                    $this->cart[$item['id']]['price']= $productPrice;
+                    session()->put('cart', $this->cart);
+                    $this->dispatch('product-update');
+                }
+                return $item['price'] * $item['quantity'];
+            });
     }
 
     public function placeOrder()
@@ -169,6 +185,13 @@ new class extends Component
             }
 
             // session()->forget('cart');
+
+            $order->load('items');
+
+            Mail::to($order->email)
+                ->queue(
+                    new OrderPlacedMail($order)
+            );
 
             $curl = curl_init();
 
@@ -336,7 +359,7 @@ new class extends Component
             
             </div>
 
-            {{-- Shipping Address --}}
+            {{-- Address --}}
             <div class="mt-6 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
 
                 <h2 class="text-xl font-bold">
@@ -396,6 +419,9 @@ new class extends Component
                                 {{ $item['quantity'] }}
                             </span>
 
+                            @php
+                                $this->getCartTotalProperty();
+                            @endphp
                             <span>
                                 ₹{{ number_format($item['price'] * $item['quantity'], 2) }}
                             </span>

@@ -9,21 +9,26 @@
 
             <x-app-logo href="{{ route('dashboard') }}" wire:navigate />
 
+            @if(auth()->user()->is_admin)
             <flux:navbar class="-mb-px max-lg:hidden">
                 <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navbar.item>
-            </flux:navbar>
 
-            <flux:navbar class="-mb-px max-lg:hidden">
                 <flux:navbar.item icon="layout-grid" :href="route('category')" :current="request()->routeIs('category')" wire:navigate>
                     {{ __('Category') }}
                 </flux:navbar.item>
-            </flux:navbar>
 
-            <flux:navbar class="-mb-px max-lg:hidden">
                 <flux:navbar.item icon="layout-grid" :href="route('product')" :current="request()->routeIs('product')" wire:navigate>
                     {{ __('Product') }}
+                </flux:navbar.item>
+
+                <flux:navbar.item icon="layout-grid" :href="route('orderPage')" :current="request()->routeIs('orderPage')" wire:navigate>
+                    {{ __('Order-Page') }}
+                </flux:navbar.item>
+                
+                <flux:navbar.item icon="layout-grid" :href="route('analytics')" :current="request()->routeIs('analytics')" wire:navigate>
+                    {{ __('Analytics') }}
                 </flux:navbar.item>
             </flux:navbar>
 
@@ -54,9 +59,9 @@
             </flux:navbar>
 
             <x-desktop-user-menu />
+            @endif
         </flux:header>
 
-        <!-- Mobile Menu -->
         <flux:sidebar collapsible="mobile" sticky class="lg:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
@@ -67,6 +72,22 @@
                 <flux:sidebar.group :heading="__('Platform')">
                     <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard')  }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('category')" :current="request()->routeIs('category')" wire:navigate>
+                        {{ __('Categories')  }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('product')" :current="request()->routeIs('product')" wire:navigate>
+                        {{ __('Products')  }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('orderPage')" :current="request()->routeIs('orderPage')" wire:navigate>
+                        {{ __('Order-Page')  }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('analytics')" :current="request()->routeIs('analytics')" wire:navigate>
+                        {{ __('Analytics')  }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
@@ -83,7 +104,9 @@
             </flux:sidebar.nav>
         </flux:sidebar>
 
-        {{ $slot }}
+        <main class="w-full min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8">
+            {{ $slot }}
+        </main>
 
         @persist('toast')
             <flux:toast.group>
