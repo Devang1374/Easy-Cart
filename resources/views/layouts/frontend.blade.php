@@ -31,7 +31,7 @@
                     <a wire:navigate href="{{route('homePage')}}" class="@if(request()->routeIs('homePage')) text-blue-700 @endif font-medium hover:text-blue-600"> Home </a>
                     <a wire:navigate href="{{route('user/product')}}" class="@if(request()->routeIs('user/product')) text-blue-700 @endif font-medium hover:text-blue-600"> Products </a>
                     @auth
-                        <a wire:navigate href="{{route('user/order')}}" class="@if(request()->routeIs('user/order')) text-blue-700 @endif font-medium hover:text-blue-600"> My Order </a>
+                        <a wire:navigate href="{{route('user/order')}}" class="break-keep @if(request()->routeIs('user/order')) text-blue-700 @endif font-medium hover:text-blue-600"> Orders </a>
                     @endauth
                     <a wire:navigate href="{{route('user/cart')}}" class="@if(request()->routeIs('user/cart')) text-blue-700 @endif font-medium hover:text-blue-600"> Cart </a>
                 </nav>
@@ -45,6 +45,25 @@
                 <div class="flex items-center gap-1 sm:gap-2">
                     {{-- Theme Toggle --}}
                     <flux:button x-data x-on:click="$flux.dark = ! $flux.dark" icon="moon" variant="subtle" aria-label="Toggle dark mode" />
+
+                    <!-- Wishlist Count -->
+                    <a
+                        href="{{route('user/wishlist')}}"
+                        wire:navigate
+                        class="relative flex items-center"
+                    >
+                        <flux:button
+                            variant="ghost"
+                            size="sm"
+                            icon="heart"
+                        >
+                            <span class="hidden xl:inline">Wishlist</span>
+                        </flux:button>
+
+                        <div class="absolute -right-1 -top-1">
+                            <livewire:front.wishlist-count />
+                        </div>
+                    </a>
 
                     {{-- Cart --}}
                     <a href="{{route('user/cart')}}">

@@ -5,11 +5,11 @@ use Livewire\Component;
 use App\Models\orderItems;
 use App\Models\orderTable;
 use App\Models\product;
+use App\Models\UserAddress;
 
 use Illuminate\Support\Facades\DB;
 
 use Livewire\Attributes\On;  
-
 
 use App\Mail\OrderPlacedMail;
 use Illuminate\Support\Facades\Mail;
@@ -33,6 +33,11 @@ new class extends Component
 
     public $order_id;
 
+    public $addresses = [];
+    public $selectedAddress = null;
+    public string $title = 'Home';
+    public string $customTitle = '';
+
     #[on('product-update')]
     public function mount()
     {
@@ -40,6 +45,10 @@ new class extends Component
 
         $this->first_name = $user->name;
         $this->email = $user->email;
+
+        $this->addresses = UserAddress::where('user_id', auth()->id())
+            ->orderByDesc('is_default')
+            ->get();
         
         $this->cart = session('cart', []);
 
@@ -304,6 +313,110 @@ new class extends Component
     {
         return 'ORD-' . now()->format('YmdHis');
     }
+
+    public function selectAddress($id)
+    {
+        $address = UserAddress::where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        $this->selectedAddress = $address->id;
+
+        $this->first_name = $address->first_name;
+        $this->last_name  = $address->last_name;
+
+        $this->phone = $address->phone;
+
+        $this->address = $address->address;
+
+        $this->city = $address->city;
+        $this->state = $address->state;
+        $this->pincode = $address->pincode;
+
+        // Load address title
+        if (in_array($address->title, ['Home', 'Office', 'Hostel'])) {
+            $this->title = $address->title;
+            $this->customTitle = '';
+        } else {
+            $this->title = 'Other';
+            $this->customTitle = $address->title;
+        }
+    }
+
+    public function saveAddress()
+    {
+        $this->validate([
+            'first_name' => 'required',
+            'last_name'  => 'required',
+            'phone'      => 'required',
+            'address'    => 'required',
+            'city'       => 'required',
+            'state'      => 'required',
+            'pincode'    => 'required',
+            'title' => 'required',
+            'customTitle' => 'required_if:title,Other|max:50',
+        ]);
+
+        UserAddress::create([
+            'user_id'    => auth()->id(),
+
+            'title' => $this->title === 'Other' 
+                            ? $this->customTitle
+                            : $this->title,
+
+            'first_name' => $this->first_name,
+            'last_name'  => $this->last_name,
+            'phone'      => $this->phone,
+
+            'address'    => $this->address,
+            'city'       => $this->city,
+            'state'      => $this->state,
+            'pincode'    => $this->pincode,
+            'is_default' => UserAddress::where('user_id', auth()->id())->doesntExist(),
+        ]);
+
+        $this->addresses = UserAddress::where('user_id', auth()->id())
+            ->orderByDesc('is_default')
+            ->get();
+
+        Flux::toast(
+            heading: 'Address Saved',
+            text: 'Your address has been saved successfully.'
+        );
+    }
+
+    public function deleteAddress($id)
+    {
+        $address = UserAddress::where('user_id', auth()->id())
+            ->findOrFail($id);
+
+        $address->delete();
+
+        // Refresh the address list
+        $this->addresses = UserAddress::where('user_id', auth()->id())
+            ->orderByDesc('is_default')
+            ->get();
+
+        // Clear selection if the deleted address was selected
+        if ($this->selectedAddress == $id) {
+            $this->selectedAddress = null;
+
+            $this->title = 'Home';
+            $this->customTitle = '';
+
+            $this->first_name = auth()->user()->name;
+            $this->last_name = '';
+            $this->phone = '';
+            $this->address = '';
+            $this->city = '';
+            $this->state = '';
+            $this->pincode = '';
+        }
+
+        Flux::toast(
+            heading: 'Address Deleted',
+            text: 'The address has been removed successfully.'
+        );
+    }
 };
 ?>
 
@@ -324,7 +437,84 @@ new class extends Component
     <div class="grid gap-8 lg:grid-cols-3">
 
         <div class="lg:col-span-2">
+            
+            @if($addresses->count())
+            <div class="rounded-3xl mb-6 border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
 
+                <div class="mb-6">
+
+                    <h2 class="mb-4 text-xl font-bold">
+                        Saved Addresses
+                    </h2>
+
+                    <div class="space-y-3">
+
+                        @foreach($addresses as $saved)
+
+                            <div
+                                wire:click="selectAddress({{ $saved->id }})"
+                                class="cursor-pointer rounded-2xl border p-4 transition
+                                    {{ $selectedAddress == $saved->id
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                        : 'border-zinc-200 dark:border-zinc-700 hover:border-blue-400'
+                                    }}"
+                            >
+
+                                <div class="flex items-start justify-between">
+
+                                    <div>
+
+                                        <p class="font-semibold">
+
+                                            {{ $saved->title }}
+
+                                            @if($saved->is_default)
+                                                <span class="text-xs text-blue-600">
+                                                    (Default)
+                                                </span>
+                                            @endif
+
+                                        </p>
+
+                                        <p class="text-sm text-zinc-500">
+
+                                            {{ $saved->address }}
+
+                                        </p>
+
+                                        <p class="text-sm text-zinc-500">
+
+                                            {{ $saved->city }},
+                                            {{ $saved->state }}
+                                            -
+                                            {{ $saved->pincode }}
+
+                                        </p>
+
+                                    </div>
+                                    <flux:button
+                                        variant="danger"
+                                        size="sm"
+                                        wire:click.stop="deleteAddress({{ $saved->id }})"
+                                        wire:confirm="Are you sure you want to delete this address?"
+                                    >
+                                        Delete
+                                    </flux:button>
+                                </div>
+
+                            </div>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+            </div>
+            @endif
+            
+
+            {{-- Address --}}
             <div class="rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
 
                 <h2 class="text-xl font-bold">
@@ -356,21 +546,38 @@ new class extends Component
                     />
             
                 </div>
-            
             </div>
-
-            {{-- Address --}}
             <div class="mt-6 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-
                 <h2 class="text-xl font-bold">
                     Shipping Address
                 </h2>
 
                 <div class="mt-6 space-y-4">
 
+                    <flux:select
+                        wire:model.live="title"
+                        label="Address Title"
+                    >
+                        <option value="Home">Home</option>
+                        <option value="Office">Office</option>
+                        <option value="Hostel">Hostel</option>
+                        <option value="Other">Other</option>
+                    </flux:select>
+
+                    @if($title === 'Other')
+
+                        <flux:input
+                            wire:model.blur="customTitle"
+                            label="Custom Address Title"
+                            placeholder="Grandma's House"
+                        />
+
+                    @endif
+
                     <flux:textarea
                         wire:model.blur="address"
                         label="Address"
+                        autocomplete="address"
                     />
 
                     <div class="grid gap-4 md:grid-cols-3">
@@ -392,6 +599,13 @@ new class extends Component
 
                     </div>
 
+                    <flux:button
+                        wire:click="saveAddress"
+                        variant="filled"
+                        class="mb-3 w-full"
+                    >
+                        Save Address
+                    </flux:button>
                 </div>
 
             </div>

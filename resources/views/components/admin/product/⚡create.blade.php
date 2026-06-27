@@ -257,14 +257,41 @@ new class extends Component
                 </div>
             @endif
 
-            <flux:input
-                wire:model="image_file"
-                name="image"
-                :label="__('Product Image')"
-                type="file"
-                :placeholder="__('Product Image...')"
-                multiple
-            />
+            <div 
+                x-data="{ isUploading: false, progress: 0 }"
+                x-on:livewire-upload-start="isUploading = true; progress = 0"
+                x-on:livewire-upload-finish="isUploading = false"
+                x-on:livewire-upload-error="isUploading = false"
+                x-on:livewire-upload-progress="progress = $event.detail.progress"
+                class="space-y-3"
+            >
+                <!-- Base Flux Input -->
+                <flux:input
+                    wire:model="image_file"
+                    name="image"
+                    :label="__('Product Image')"
+                    type="file"
+                    :placeholder="__('Product Image...')"
+                    multiple
+                />
+            
+                <!-- Reactive Progress Bar Wrapper -->
+                <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
+                    <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                        <span>{{ __('Uploading file...') }}</span>
+                        <span x-text="progress + '%'">0%</span>
+                    </div>
+                    
+                    <!-- Progress Bar Track -->
+                    <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                        <!-- Progress Bar Fill (Matches Flux Accent Color) -->
+                        <div 
+                            class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
+                            :style="`width: ${progress}%`"
+                        ></div>
+                    </div>
+                </div>
+            </div>
 
             <div class="flex items-center justify-end">
                 <flux:button variant="primary" type="submit" class="w-full" data-test="create-button">

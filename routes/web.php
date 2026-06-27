@@ -22,8 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('user/checkout/{order_id?}', [UserController::class, 'checkout'])->name('user/checkout');    
     Route::get('user/order', [UserController::class, 'order'])->name('user/order');    
     Route::get('user/order-success/{order_id}', [UserController::class, 'orderSuccess'])->name('user/order-success');
-});
-
+    });
+    
+    Route::get('user/wishlist', [UserController::class, 'wishlist'])->name('user/wishlist');
 
 Route::get('user/cart', [UserController::class, 'cart'])->name('user/cart');
 Route::get('user/homePage', [UserController::class, 'homePage'])->name('homePage');

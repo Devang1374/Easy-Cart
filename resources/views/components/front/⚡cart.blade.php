@@ -130,8 +130,6 @@ new class extends Component
                 heading: 'Stock Limit Reached',
                 text: "Only {$productQuntity} items available."
             );
-
-            return;
         }
 
         $cart[$productId]['quantity'] = $quantity;
@@ -141,6 +139,7 @@ new class extends Component
         $this->cart = $cart;
 
         $this->dispatch('cart-updated');
+
     }
 };
 ?>
@@ -268,8 +267,8 @@ new class extends Component
                                                         type="number"
                                                         min="1"
                                                         max="{{ $stock }}"
-                                                        value="{{ $item['quantity'] }}"
-                                                        wire:change="updateQuantity({{ $item['id'] }}, $event.target.value)"
+                                                        wire:model.blur="cart.{{ $item['id'] }}.quantity",
+                                                        wire:change.live="updateQuantity({{ $item['id'] }}, $event.target.value)"
                                                         class="w-16 border-0 bg-transparent text-center focus:ring-0"
                                                     />
 

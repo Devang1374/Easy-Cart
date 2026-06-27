@@ -4,6 +4,7 @@ use Livewire\Component;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Wishlist;
 
 new class extends Component
 {
@@ -11,11 +12,63 @@ new class extends Component
     public $featuredProducts;
     public $latestProducts;
 
+    public array $wishlist = [];
+
     public function mount()
     {
         $this->categories = Category::query()->where('is_active', true)->latest()->take(8)->get();
         $this->featuredProducts = Product::query()->with('images')->where('is_active', true)->where('featured', true)->latest()->take(8)->get();
         $this->latestProducts = Product::query()->with('images')->where('is_active', true)->latest()->take(8)->get();
+
+        if (auth()->check()) {
+            $this->wishlist = Wishlist::where('user_id', auth()->id())
+                ->pluck('product_id')
+                ->toArray();
+        }
+    }
+
+    public function toggleWishlist($productId)
+    {
+        if (! auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $wishlist = Wishlist::where('user_id', auth()->id())
+            ->where('product_id', $productId);
+
+        if ($wishlist->exists()) {
+
+            $wishlist->delete();
+
+            $this->wishlist = array_values(
+                array_diff($this->wishlist, [$productId])
+            );
+
+            Flux::toast(
+                variant: 'warning',
+                heading: 'Removed from Wishlist',
+                text: 'Product removed successfully.'
+            );
+
+            $this->dispatch('wishlist-updated');
+
+        } else {
+
+            Wishlist::create([
+                'user_id' => auth()->id(),
+                'product_id' => $productId,
+            ]);
+
+            $this->wishlist[] = $productId;
+
+            Flux::toast(
+                variant: 'success',
+                heading: 'Added to Wishlist',
+                text: 'Product added successfully.'
+            );
+
+            $this->dispatch('wishlist-updated');
+        }
     }
 };
 ?>
@@ -49,13 +102,13 @@ new class extends Component
                 </p>
     
                 <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
-                    <a wire:navigate href="/user/product">
+                    <a href="#featured-products">
                         <button class="rounded-xl px-6 py-3 font-medium text-black bg-white transition hover:bg-white/90">
                             Show Now
                         </button>
                     </a>
 
-                    <a href="#featured-products">
+                    <a wire:navigate href="/user/product">
                         <button class="rounded-xl border border-white/20 px-6 py-3 font-medium text-white transition hover:bg-white/10">
                             Explore Products
                         </button>
@@ -151,97 +204,131 @@ new class extends Component
             <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
     
                 @foreach($featuredProducts as $product)
-                <div class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] dark:border-zinc-800 dark:bg-zinc-900">
-                        <a href="{{ route('user/productDetails', $product->slug) }}">
-    
-                        {{-- Product Image --}}
-                        <div class="relative overflow-hidden">
-    
-                            {{-- Featured Badge --}}
-                            <div class="absolute left-4 top-4 z-20">
-                                <span class="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
-                                    ⭐ Featured
-                                </span>
-                            </div>
-    
-                            @if(isset($product->images[0]))
-    
-                                <img
-                                    src="{{ asset('storage/'.$product->images[0]->image) }}"
-                                    alt="{{ $product->name }}"
-                                    class="h-72 w-full object-cover transition duration-700 group-hover:scale-110"
-                                >
-    
+                    <div class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] dark:border-zinc-800 dark:bg-zinc-900">
+
+                        {{-- Wishlist Button --}}
+                        <button
+                            type="button"
+                            wire:click="toggleWishlist({{ $product->id }})"
+                            class="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 shadow transition hover:scale-110 dark:bg-zinc-900/90"
+                        >
+                            @if(in_array($product->id, $wishlist))
+                                {{-- Filled Heart --}}
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-6 w-6 fill-red-500 text-red-500"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M12 21s-7-4.35-9.5-8.28C.89 10.28 2.1 6.5 5.8 5.4A5.24 5.24 0 0112 8a5.24 5.24 0 016.2-2.6c3.7 1.1 4.91 4.88 3.3 7.32C19 16.65 12 21 12 21z"/>
+                                </svg>
                             @else
-    
-                                <div class="flex h-72 items-center justify-center bg-zinc-100 dark:bg-zinc-800">
-                                    <span class="text-zinc-400">
-                                        No Image
+                                {{-- Outline Heart --}}
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-6 w-6 text-zinc-600 dark:text-zinc-300"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364 4.318 12.682a4.5 4.5 0 010-6.364z"/>
+                                </svg>
+                            @endif
+                        </button>
+        
+                        <a
+                            href="{{ route('user/productDetails', $product->slug) }}"
+                            wire:navigate
+                            class="block"
+                        >
+
+                            {{-- Product Image --}}
+                            <div class="relative overflow-hidden">
+
+                                {{-- Featured Badge --}}
+                                <div class="absolute left-4 top-4 z-20">
+                                    <span class="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white shadow-lg">
+                                        ⭐ Featured
                                     </span>
                                 </div>
-    
-                            @endif
-    
-                            {{-- Overlay --}}
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition duration-300 group-hover:opacity-100"></div>
-        
+
+                                @if(isset($product->images[0]))
+
+                                    <img
+                                        src="{{ asset('storage/'.$product->images[0]->image) }}"
+                                        alt="{{ $product->name }}"
+                                        class="h-72 w-full object-cover transition duration-700 group-hover:scale-110"
+                                    >
+
+                                @else
+
+                                    <div class="flex h-72 items-center justify-center bg-zinc-100 dark:bg-zinc-800">
+                                        <span class="text-zinc-400">
+                                            No Image
+                                        </span>
+                                    </div>
+
+                                @endif
+
+                                {{-- Overlay --}}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition duration-300 group-hover:opacity-100"></div>
+
                                 {{-- Hover Button --}}
                                 <div class="absolute bottom-4 left-4 right-4 z-20 translate-y-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-        
-                                    <a href="{{ route('user/productDetails', $product->slug) }}">
-                                        <button class="w-full rounded-xl bg-white py-3 font-semibold text-black transition hover:bg-zinc-100">
-                                            View Product
-                                        </button>
-                                    </a>
-        
+
+                                    <span class="block w-full rounded-xl bg-white py-3 text-center font-semibold text-black transition hover:bg-zinc-100">
+                                        View Product
+                                    </span>
+
                                 </div>
-        
+
                             </div>
-        
+
                             {{-- Product Info --}}
                             <div class="p-6">
-        
+
                                 <h3 class="line-clamp-2 text-lg font-bold tracking-tight">
                                     {{ $product->name }}
                                 </h3>
-        
+
                                 <div class="mt-4 flex items-center justify-between">
-        
+
                                     <div>
                                         <p class="text-xs uppercase tracking-wider text-zinc-500">
                                             Starting From
                                         </p>
-        
+
                                         <p class="text-2xl font-black text-blue-600 dark:text-blue-400">
                                             ₹{{ number_format($product->price, 2) }}
                                         </p>
                                     </div>
-        
+
                                     @if($product->stock > 0)
-        
+
                                         <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                             In Stock
                                         </span>
-        
+
                                     @else
-        
+
                                         <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                             Out of Stock
                                         </span>
-        
+
                                     @endif
-        
+
                                 </div>
-        
+
                             </div>
-        
+
                         </a>
-                        </div>
-                    @endforeach
-        
-                </div>
+
+                    </div>    
+                @endforeach
         
             </div>
+        
+        </div>
         
     </section>
 
@@ -264,67 +351,84 @@ new class extends Component
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
         @foreach($latestProducts as $product)
-        <div class="group overflow-hidden rounded-3xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
-            <a href="{{ route('user/productDetails', $product->slug) }}">
-            <div class="relative overflow-hidden">
+            <div class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
 
-                @if(isset($product->images[0]))
+                {{-- Wishlist Button --}}
+                <button
+                    type="button"
+                    wire:click="toggleWishlist({{ $product->id }})"
+                    class="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 shadow transition hover:scale-110 dark:bg-zinc-900/90"
+                >
+                    @if(in_array($product->id, $wishlist))
+                        {{-- Filled Heart --}}
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 fill-red-500 text-red-500"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 21s-7-4.35-9.5-8.28C.89 10.28 2.1 6.5 5.8 5.4A5.24 5.24 0 0112 8a5.24 5.24 0 016.2-2.6c3.7 1.1 4.91 4.88 3.3 7.32C19 16.65 12 21 12 21z"/>
+                        </svg>
+                    @else
+                        {{-- Outline Heart --}}
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 text-zinc-600 dark:text-zinc-300"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364 4.318 12.682a4.5 4.5 0 010-6.364z"/>
+                        </svg>
+                    @endif
+                </button>
 
-                    <img
-                        src="{{ asset('storage/'.$product->images[0]->image) }}"
-                        alt="{{ $product->name }}"
-                        class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
-                    >
-
-                @else
-
-                    <div class="flex h-64 items-center justify-center bg-zinc-100 dark:bg-zinc-800">
-                        No Image
+                {{-- Product Link --}}
+                <a
+                    href="{{ route('user/productDetails', $product->slug) }}"
+                    wire:navigate
+                    class="block"
+                >
+                    {{-- Image --}}
+                    <div class="overflow-hidden">
+                        @if(isset($product->images[0]))
+                            <img
+                                src="{{ asset('storage/'.$product->images[0]->image) }}"
+                                alt="{{ $product->name }}"
+                                class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                            >
+                        @endif
                     </div>
 
-                @endif
+                    {{-- Content --}}
+                    <div class="p-5">
+                        <p class="text-xs uppercase tracking-wider text-zinc-500">
+                            {{ $product->category->name ?? 'Category' }}
+                        </p>
+
+                        <h3 class="mt-2 line-clamp-2 font-bold">
+                            {{ $product->name }}
+                        </h3>
+
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xl font-black text-blue-600 dark:text-blue-400">
+                                ₹{{ number_format($product->price, 2) }}
+                            </span>
+
+                            @if($product->stock > 0)
+                                <span class="text-xs text-green-600">
+                                    In Stock
+                                </span>
+                            @else
+                                <span class="text-xs text-red-600">
+                                    Out of Stock
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
 
             </div>
-
-            <div class="p-5">
-
-                <h3 class="line-clamp-2 font-semibold">
-                    {{ $product->name }}
-                </h3>
-
-                <div class="mt-3 flex items-center justify-between">
-                    <span class="text-xl font-bold">
-                        ₹{{ number_format($product->price, 2) }}
-                    </span>
-
-                    @if($product->stock > 0)
-
-                        <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            In Stock
-                        </span>
-
-                    @else
-
-                        <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                            Out of Stock
-                        </span>
-
-                    @endif
-
-                </div>
-
-                <div class="mt-5">
-
-                    <a href="{{ route('user/productDetails', $product->slug)}}">
-                        <flux:button variant="primary" class="w-full">
-                            View Product
-                        </flux:button>
-                    </a>
-
-                </div>
-            </div>
-        </a>
-        </div>
         @endforeach
 
         </div>

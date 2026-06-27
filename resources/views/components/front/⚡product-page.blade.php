@@ -4,6 +4,8 @@ use Livewire\Component;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Wishlist;
+
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 
@@ -13,7 +15,8 @@ new class extends Component
 
     public $categories;
     public $category;
-
+    public array $wishlist = [];
+    
     public function mount()
     {
        $this->categories = Category::query()
@@ -25,7 +28,14 @@ new class extends Component
             $this->loadProducts();
         }
 
+        if (auth()->check()) {
+            $this->wishlist = Wishlist::where('user_id', auth()->id())
+                ->pluck('product_id')
+                ->toArray();
+        }
+
     }
+
     #[Computed]
     public function loadProducts()
     {
@@ -86,6 +96,50 @@ new class extends Component
     public function updatedSort()
     {
         $this->resetPage();
+    }
+
+    public function toggleWishlist($productId)
+    {
+        if (! auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $wishlist = Wishlist::where('user_id', auth()->id())
+            ->where('product_id', $productId);
+
+        if ($wishlist->exists()) {
+
+            $wishlist->delete();
+
+            $this->wishlist = array_values(
+                array_diff($this->wishlist, [$productId])
+            );
+
+            Flux::toast(
+                variant: 'warning',
+                heading: 'Removed from Wishlist',
+                text: 'Product removed successfully.'
+            );
+
+            $this->dispatch('wishlist-updated');
+
+        } else {
+
+            Wishlist::create([
+                'user_id' => auth()->id(),
+                'product_id' => $productId,
+            ]);
+
+            $this->wishlist[] = $productId;
+
+            Flux::toast(
+                variant: 'success',
+                heading: 'Added to Wishlist',
+                text: 'Product added successfully.'
+            );
+
+            $this->dispatch('wishlist-updated');
+        }
     }
 };
 ?>
@@ -184,48 +238,84 @@ new class extends Component
                 </div>
             @else
             @foreach($products as $product)    
-                <a
-                        href="{{ route('user/productDetails', $product->slug) }}"
-                        class="group block"
-                        wire:navigate
-                    >      
-                    <div class="group overflow-hidden rounded-3xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-                        {{-- Image --}}
-                        <div class="overflow-hidden">
-                            @if(isset($product->images[0]))
-                                <img
-                                    src="{{ asset('storage/'.$product->images[0]->image) }}"
-                                    alt="{{ $product->name }}"
-                                    class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
-                                >
-                            @endif
-                        </div>
+            <div class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
 
-                        {{-- Content --}}
-                        <div class="p-5">
-                            <p class="text-xs uppercase tracking-wider text-zinc-500">
-                                {{ $product->category->name ?? 'Category' }}
-                            </p>
-                            <h3 class="mt-2 line-clamp-2 font-bold">
-                                {{ $product->name }}
-                            </h3>
-                            <div class="mt-4 flex items-center justify-between">
-                                <span class="text-xl font-black text-blue-600 dark:text-blue-400">
-                                    ₹{{ number_format($product->price, 2) }}
+                {{-- Wishlist Button --}}
+                <button
+                    type="button"
+                    wire:click="toggleWishlist({{ $product->id }})"
+                    class="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 shadow transition hover:scale-110 dark:bg-zinc-900/90"
+                >
+                    @if(in_array($product->id, $wishlist))
+                        {{-- Filled Heart --}}
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 fill-red-500 text-red-500"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 21s-7-4.35-9.5-8.28C.89 10.28 2.1 6.5 5.8 5.4A5.24 5.24 0 0112 8a5.24 5.24 0 016.2-2.6c3.7 1.1 4.91 4.88 3.3 7.32C19 16.65 12 21 12 21z"/>
+                        </svg>
+                    @else
+                        {{-- Outline Heart --}}
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 text-zinc-600 dark:text-zinc-300"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364 4.318 12.682a4.5 4.5 0 010-6.364z"/>
+                        </svg>
+                    @endif
+                </button>
+
+                {{-- Product Link --}}
+                <a
+                    href="{{ route('user/productDetails', $product->slug) }}"
+                    wire:navigate
+                    class="block"
+                >
+                    {{-- Image --}}
+                    <div class="overflow-hidden">
+                        @if(isset($product->images[0]))
+                            <img
+                                src="{{ asset('storage/'.$product->images[0]->image) }}"
+                                alt="{{ $product->name }}"
+                                class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                            >
+                        @endif
+                    </div>
+
+                    {{-- Content --}}
+                    <div class="p-5">
+                        <p class="text-xs uppercase tracking-wider text-zinc-500">
+                            {{ $product->category->name ?? 'Category' }}
+                        </p>
+
+                        <h3 class="mt-2 line-clamp-2 font-bold">
+                            {{ $product->name }}
+                        </h3>
+
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xl font-black text-blue-600 dark:text-blue-400">
+                                ₹{{ number_format($product->price, 2) }}
+                            </span>
+
+                            @if($product->stock > 0)
+                                <span class="text-xs text-green-600">
+                                    In Stock
                                 </span>
-                                @if($product->stock > 0)
-                                    <span class="text-xs text-green-600">
-                                        In Stock
-                                    </span>
-                                @else
-                                    <span class="text-xs text-red-600">
-                                        Out of Stock
-                                    </span>
-                                @endif
-                            </div>
+                            @else
+                                <span class="text-xs text-red-600">
+                                    Out of Stock
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </a>
+
+            </div>
             @endforeach
             @endif    
         </div>
