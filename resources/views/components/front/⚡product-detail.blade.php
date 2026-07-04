@@ -149,6 +149,24 @@ new class extends Component
                 {{ $product->name }}
             </h1>
 
+            <div class="mt-3 flex items-center gap-3">
+
+                <div class="text-xl text-yellow-400">
+                    @for($i = 1; $i <= 5; $i++)
+                        {{ $i <= floor($product->averageRating()) ? '★' : '☆' }}
+                    @endfor
+                </div>
+            
+                <span class="font-semibold">
+                    {{ $product->averageRating() }}
+                </span>
+            
+                <span class="text-zinc-500">
+                    ({{ $product->totalReviews() }} Reviews)
+                </span>
+            
+            </div>
+
             <p class="mt-6 text-4xl font-black text-blue-600 dark:text-blue-400">
                 ₹{{ number_format($product->price, 2) }}
             </p>
@@ -255,6 +273,15 @@ new class extends Component
             </div>
 
         </div>
+
+    </section>
+
+    <section class="mt-20">
+
+        <livewire:front.product-review
+            :product="$product"
+            :key="'reviews-'.$product->id"
+        />
 
     </section>
 

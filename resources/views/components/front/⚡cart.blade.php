@@ -124,8 +124,8 @@ new class extends Component
         $productQuntity = product::where('id', $productId)->value('stock');
 
         if ($quantity > $productQuntity) {
-
-            Flux::toast(
+            $this->mount();
+            return Flux::toast(
                 variant: 'danger',
                 heading: 'Stock Limit Reached',
                 text: "Only {$productQuntity} items available."

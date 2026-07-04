@@ -8,7 +8,7 @@ class orderItems extends Model
 {
     public function order()
     {
-        return $this->belongsTo(orderTable::class);
+        return $this->belongsTo(orderTable::class, 'order_table_id');
     }
 
     public function product()

@@ -98,6 +98,58 @@ new class extends Component
             'Invoice-' . $this->order->order_number . '.pdf'
         );
     }
+
+    public function isStepCompleted($step)
+    {
+        $status = strtolower($this->order->status);
+
+        $steps = [
+            'pending',
+            'processing',
+            'shipped',
+            'delivered',
+        ];
+
+        if ($status === 'cancelled') {
+            return false;
+        }
+
+        return array_search($step, $steps)
+            <= array_search($status, $steps);
+    }
+
+    public function isCurrentStep($step)
+    {
+        return strtolower($this->order->status) === strtolower($step);
+    }
+
+    public function isFutureStep($step)
+    {
+        $steps = [
+            'pending',
+            'processing',
+            'shipped',
+            'delivered',
+        ];
+
+        return array_search($step, $steps)
+            > array_search(strtolower($this->order->status), $steps);
+    }
+
+    public function isLineCompleted($step)
+    {
+        $steps = [
+            'pending',
+            'processing',
+            'shipped',
+            'delivered',
+        ];
+    
+        $current = array_search(strtolower($this->order->status), $steps);
+        $line = array_search(strtolower($step), $steps);
+    
+        return $line < $current;
+    }
 };
 ?>
 
@@ -188,6 +240,182 @@ new class extends Component
 
         </div>
 
+    </div>
+
+    {{-- Order Tracking --}}
+    <div class="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    
+        <h2 class="text-2xl font-bold">
+            Order Tracking
+        </h2>
+    
+        <p class="mt-2 text-zinc-500 dark:text-zinc-400">
+            Track the progress of your order.
+        </p>
+    
+        @if($order->status === 'cancelled')
+    
+            <div class="mt-8 flex items-center gap-4 rounded-2xl border border-red-200 bg-red-50 p-5 dark:border-red-900 dark:bg-red-950/30">
+    
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-xl text-white">
+                    ✕
+                </div>
+    
+                <div>
+                    <h3 class="font-semibold text-red-600 dark:text-red-400">
+                        Order Cancelled
+                    </h3>
+    
+                    <p class="text-sm text-zinc-500">
+                        This order has been cancelled.
+                    </p>
+                </div>
+    
+            </div>
+    
+        @else
+
+            <div class="mt-4 rounded-2xl bg-blue-50 p-4 dark:bg-blue-900/20">
+
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                    Estimated Delivery
+                </p>
+
+                <p class="mt-1 text-lg font-bold">
+                    {{ $order->created_at->addDays(5)->format('d M Y') }}
+                </p>
+
+            </div>
+    
+            <div class="mt-8 space-y-8">
+    
+                {{-- Pending --}}
+                <div class="flex items-start gap-4" style="margin-bottom: 5px;">
+    
+                    <div class="flex flex-col items-center">
+    
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full @if($this->isCurrentStep('pending')) bg-blue-600 ring-4 ring-blue-200 animate-pulse text-white @elseif($this->isStepCompleted('pending')) bg-green-500 text-white @else bg-zinc-200 dark:bg-zinc-700 @endif">
+                            ✓
+                        </div>
+    
+                        <div
+                            class="mt-2 h-16 w-1 rounded-full
+                            @if($this->isLineCompleted('pending'))
+                                bg-green-500
+                            @else
+                                bg-zinc-200 dark:bg-zinc-700
+                            @endif">
+                        </div>
+    
+                    </div>
+    
+                    <div>
+    
+                        <h3 class="font-semibold">
+                            Order Placed
+                        </h3>
+    
+                        <p class="text-sm text-zinc-500">
+                            We have received your order.
+                        </p>
+    
+                    </div>
+    
+                </div>
+    
+                {{-- Processing --}}
+                <div class="flex items-start gap-4" style=" margin-bottom: 5px;">
+    
+                    <div class="flex flex-col items-center">
+    
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full @if($this->isCurrentStep('processing')) bg-blue-600 ring-4 ring-blue-200 animate-pulse text-white @elseif($this->isStepCompleted('processing')) bg-green-500 text-white @else bg-zinc-200 dark:bg-zinc-700 @endif">
+                            ⚙
+                        </div>
+    
+                        <div
+                            class="mt-2 h-16 w-1 rounded-full
+                            @if($this->isLineCompleted('processing'))
+                                bg-green-500
+                            @else
+                                bg-zinc-200 dark:bg-zinc-700
+                            @endif">
+                        </div>
+    
+                    </div>
+    
+                    <div>
+    
+                        <h3 class="font-semibold">
+                            Processing
+                        </h3>
+    
+                        <p class="text-sm text-zinc-500">
+                            Your items are being prepared.
+                        </p>
+    
+                    </div>
+    
+                </div>
+    
+                {{-- Shipped --}}
+                <div class="flex items-start gap-4" style="margin-bottom: 5px;">
+    
+                    <div class="flex flex-col items-center">
+    
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full @if($this->isCurrentStep('shipped')) bg-blue-600 ring-4 ring-blue-200 animate-pulse text-white @elseif($this->isStepCompleted('shipped')) bg-green-500 text-white @else bg-zinc-200 dark:bg-zinc-700 @endif">
+                            🚚
+                        </div>
+
+                        <div
+                            class="mt-2 h-16 w-1 rounded-full
+                            @if($this->isLineCompleted('shipped'))
+                                bg-green-500
+                            @else
+                                bg-zinc-200 dark:bg-zinc-700
+                            @endif">
+                        </div>
+    
+                    </div>
+    
+                    <div>
+    
+                        <h3 class="font-semibold">
+                            Shipped
+                        </h3>
+    
+                        <p class="text-sm text-zinc-500">
+                            Your order is on the way.
+                        </p>
+    
+                    </div>
+    
+                </div>
+    
+                {{-- Delivered --}}
+                <div class="flex items-start gap-4" style="margin-bottom: 5px;">
+    
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full @if($this->isStepCompleted('delivered')) bg-green-500 text-white @else bg-zinc-200 dark:bg-zinc-700 @endif">
+                        📦
+                    </div>
+    
+                    <div>
+    
+                        <h3 class="font-semibold">
+                            Delivered
+                        </h3>
+    
+                        <p class="text-sm text-zinc-500">
+                            Your order has been delivered.
+                        </p>
+    
+                    </div>
+    
+                </div>
+    
+            </div>
+    
+        @endif
+    
     </div>
 
     {{-- Order Items --}}

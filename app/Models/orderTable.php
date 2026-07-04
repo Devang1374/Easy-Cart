@@ -10,7 +10,7 @@ class orderTable extends Model
 {
     public function items()
     {
-        return $this->hasMany(orderItems::class);
+        return $this->hasMany(orderItems::class, 'order_table_id');
     }
 
     public function coupon()

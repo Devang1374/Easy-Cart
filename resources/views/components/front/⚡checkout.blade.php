@@ -39,7 +39,6 @@ new class extends Component
     public string $title = 'Home';
     public string $customTitle = '';
 
-    #[on('product-update')]
     public function mount()
     {
         $user = auth()->user();
@@ -70,8 +69,29 @@ new class extends Component
             $this->state = $order['state'];
 
             $this->appliedCoupon = $order->coupon;
-            if(!empty($order['coupon_code'])){
-                $this->couponCode = $order['coupon_code'];
+            if ($order->coupon) {
+            
+                $coupon = $order->coupon;
+            
+                if (
+                    $coupon->is_active &&
+                    (!$coupon->starts_at || now()->gte($coupon->starts_at)) &&
+                    (!$coupon->expires_at || now()->lte($coupon->expires_at))
+                ) {
+                    $this->appliedCoupon = $coupon;
+                    $this->couponCode = $coupon->code;
+                } else {
+                    // Coupon became invalid while order was pending
+                    $this->appliedCoupon = null;
+                    $this->couponCode = '';
+            
+                    $order->update([
+                        'coupon_id' => null,
+                        'coupon_code' => null,
+                        'discount_amount' => 0,
+                        'total_amount' => $this->cartTotal,
+                    ]);
+                }
             }
 
             foreach($items as $item){
@@ -119,6 +139,12 @@ new class extends Component
 
     public function placeOrder()
     {
+        logger()->info([
+            'couponCode' => $this->couponCode,
+            'appliedCoupon' => $this->appliedCoupon?->code,
+            'discount' => $this->discount,
+            'finalTotal' => $this->finalTotal,
+        ]);
         try{
         $this->validate();
 
@@ -270,9 +296,9 @@ new class extends Component
 
             $result = json_decode($response, true);
 
-            orderTable::where('id', $order->id)->update([
+            $order->update([
                 'cf_payment_id' => $result['payment_session_id']
-            ]);
+            ]); 
 
             }else{
                 if($this->couponEdited){
@@ -510,8 +536,6 @@ new class extends Component
     public $couponEdited = null;
     public function applyCoupon()
     {
-        $this->couponEdited = true;
-
         $this->validate([
             'couponCode' => 'required|string',
         ]);
@@ -521,6 +545,7 @@ new class extends Component
             ->first();
 
         if (! $coupon) {
+            $this->couponEdited = false;
 
             Flux::toast(
                 variant: 'danger',
@@ -533,6 +558,7 @@ new class extends Component
 
         // Not started yet
         if ($coupon->starts_at && now()->lt($coupon->starts_at)) {
+            $this->couponEdited = false;
 
             Flux::toast(
                 variant: 'danger',
@@ -546,6 +572,10 @@ new class extends Component
         // Expired
         if ($coupon->expires_at && now()->gt($coupon->expires_at)) {
 
+            $this->appliedCoupon = null;
+            $this->couponCode = '';
+            $this->couponEdited = false;
+
             Flux::toast(
                 variant: 'danger',
                 heading: 'Coupon Expired',
@@ -557,6 +587,7 @@ new class extends Component
 
         // Minimum order amount
         if ($this->cartTotal < $coupon->minimum_amount) {
+            $this->couponEdited = false;
 
             Flux::toast(
                 variant: 'danger',
@@ -572,6 +603,7 @@ new class extends Component
             !is_null($coupon->usage_limit) &&
             $coupon->used_count >= $coupon->usage_limit
         ) {
+            $this->couponEdited = false;
 
             Flux::toast(
                 variant: 'danger',
@@ -588,6 +620,8 @@ new class extends Component
             heading: 'Coupon Applied',
             text: 'Coupon applied successfully.'
         );
+
+        $this->couponEdited = true;
     }
 
     public function removeCoupon()
@@ -869,7 +903,7 @@ new class extends Component
                 @if(!$appliedCoupon)
 
                     <flux:input
-                        wire:model.live="couponCode"
+                        wire:model.defer="couponCode"
                         label="Coupon Code"
                         placeholder="Enter coupon code"
                     />
@@ -951,6 +985,9 @@ new class extends Component
                     document.addEventListener('livewire:init', () => {
 
                         Livewire.on('start-payment', (event) => {
+
+                            console.log("Payment event fired");
+                            console.log(event);
 
                             cashfree.checkout({
                                 paymentSessionId: event[0]['paymentSessionId']

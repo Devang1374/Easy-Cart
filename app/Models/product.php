@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Models\OrderItems;
+
 class product extends Model
 {
     protected $fillable = [
@@ -49,5 +51,77 @@ class product extends Model
     public function wishlists()
     {
         return $this->hasMany(Wishlist::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews()
+    {
+        return $this->hasMany(Review::class)
+            ->where('is_approved', true);
+    }
+
+    public function averageRating()
+    {
+        return round(
+            $this->approvedReviews()->avg('rating') ?? 0,
+            1
+        );
+    }
+
+    public function totalReviews()
+    {
+        return $this->approvedReviews()->count();
+    }
+
+    public function ratingCount($stars)
+    {
+        return $this->approvedReviews()
+            ->where('rating', $stars)
+            ->count();
+    }
+
+    public function canBeReviewedBy($user)
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $alreadyReviewed = $this->reviews()
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return false;
+        }
+
+        return OrderItems::where('product_id', $this->id)
+            ->whereHas('order', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->where('status', 'Delivered');
+            })
+            ->exists();
+    }
+
+    public function userReview($user)
+    {
+        if (!$user) {
+            return null;
+        }
+
+        return $this->reviews()
+            ->where('user_id', $user->id)
+            ->first();
+    }
+
+    public function ratingBreakdown()
+    {
+        return $this->approvedReviews()
+            ->selectRaw('rating, COUNT(*) as total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating');
     }
 }
