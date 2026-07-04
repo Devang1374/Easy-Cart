@@ -21,4 +21,12 @@ class AdminController extends Controller
     public function analytics(){
         return view('analyticsPage');
     }
+
+    public function coupon(){
+        return view('coupon');
+    }
+
+    public function banner(){
+        return view('banner');
+    }
 }

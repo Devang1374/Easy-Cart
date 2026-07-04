@@ -64,3 +64,29 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+@keyframes heroFloat {
+
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+
+}
+
+.hero-image img {
+
+    animation: heroFloat 5s ease-in-out infinite;
+
+}
+
+.hero-slider img{
+    will-change: transform;
+}

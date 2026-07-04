@@ -30,6 +30,14 @@
                 <flux:navbar.item icon="layout-grid" :href="route('analytics')" :current="request()->routeIs('analytics')" wire:navigate>
                     {{ __('Analytics') }}
                 </flux:navbar.item>
+
+                <flux:navbar.item icon="layout-grid" :href="route('coupon')" :current="request()->routeIs('coupon')" wire:navigate>
+                    {{ __('Coupon') }}
+                </flux:navbar.item>
+
+                <flux:navbar.item icon="layout-grid" :href="route('banner')" :current="request()->routeIs('banner')" wire:navigate>
+                    {{ __('Banner') }}
+                </flux:navbar.item>
             </flux:navbar>
 
             <flux:spacer />
@@ -88,6 +96,14 @@
 
                     <flux:sidebar.item icon="layout-grid" :href="route('analytics')" :current="request()->routeIs('analytics')" wire:navigate>
                         {{ __('Analytics')  }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('coupon')" :current="request()->routeIs('coupon')" wire:navigate>
+                        {{ __('Coupon')  }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="layout-grid" :href="route('banner')" :current="request()->routeIs('banner')" wire:navigate>
+                        {{ __('Banner')  }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>

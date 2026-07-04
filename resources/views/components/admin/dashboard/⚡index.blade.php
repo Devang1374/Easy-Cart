@@ -6,11 +6,17 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\orderTable;
 
+use Livewire\Attributes\On;  
+
 new class extends Component
 {
     public $stats;
     public $recentProducts = [];
+    public $lowStockProducts;
 
+    public $showUpdate = false;
+
+    #[on('stats-updated')]
     public function mount(){
         $this->stats = [
             'products' => Product::count(),
@@ -23,10 +29,33 @@ new class extends Component
             'deliveredOrders' => orderTable::where('status','delivered')->count(),
         ];
 
-         $this->recentProducts = Product::latest()
+        $this->recentProducts = Product::latest()
             ->take(5)
             ->get()
             ->toArray();
+
+        $this->lowStockProducts = Product::where('stock', '<=', '2')
+            ->where('is_active', '1')
+            ->take(5)
+            ->get()
+            ->toArray();
+    }
+
+    public $selectedProduct;
+    public function updateStock($id){
+        $this->selectedProduct = Product::with('images')->findOrFail($id);
+        $this->showUpdate = true;
+    }
+
+    public $stock;
+    public function update($id){
+        $this->validate([
+            'stock' => 'required'
+        ]);
+
+        Product::where('id', $id)->update(['stock' => $this->stock]);
+        $this->mount();
+        $this->showUpdate = false;
     }
 };
 ?>
@@ -219,4 +248,147 @@ new class extends Component
             </flux:table>
         </div>
     </div>
+
+    @if($lowStockProducts)
+    <div class="flex flex-col rounded-xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+        <div class="border-b border-zinc-100 p-5 dark:border-zinc-800">
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Low Stock Products</h2>
+        </div>
+        
+        <div class="w-full overflow-x-auto p-2">
+            <flux:table
+                class="w-full min-w-[900px] table-fixed"
+                container:class="w-full"
+            >
+                <flux:table.columns>
+                    <flux:table.column sticky class="w-1/6 bg-white dark:bg-zinc-900">
+                        Product
+                    </flux:table.column>
+        
+                    <flux:table.column class="w-1/6">
+                        Category
+                    </flux:table.column>
+        
+                    <flux:table.column class="w-1/6">
+                        Price
+                    </flux:table.column>
+        
+                    <flux:table.column class="w-1/6">
+                        Stock
+                    </flux:table.column>
+        
+                    <flux:table.column class="w-1/6">
+                        Status
+                    </flux:table.column>
+        
+                    <flux:table.column class="w-1/6">
+                        Action
+                    </flux:table.column>
+                </flux:table.columns>
+        
+                <flux:table.rows>
+                    @foreach($lowStockProducts as $product)
+                        <flux:table.row class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+        
+                            <flux:table.cell sticky class="bg-white dark:bg-zinc-900">
+                                <span class="block truncate font-medium">
+                                    {{ $product['name'] }}
+                                </span>
+                            </flux:table.cell>
+        
+                            <flux:table.cell>
+                                {{ category::where('id', $product['category_id'])->value('name') ?? 'Uncategorized' }}
+                            </flux:table.cell>
+        
+                            <flux:table.cell class="font-mono">
+                                ₹{{ number_format($product['price'], 2) }}
+                            </flux:table.cell>
+        
+                            <flux:table.cell>
+                                @if($product['stock'] == 0)
+                                    <span class="font-medium text-red-600 dark:text-red-400">
+                                        Out of stock
+                                    </span>
+                                @elseif($product['stock'] < 10)
+                                    <span class="font-medium text-amber-600 dark:text-amber-400">
+                                        {{ $product['stock'] }} left
+                                    </span>
+                                @else
+                                    {{ $product['stock'] }}
+                                @endif
+                            </flux:table.cell>
+        
+                            <flux:table.cell>
+                                @if($product['is_active'])
+                                    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/10 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                        Active
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                        Draft
+                                    </span>
+                                @endif
+                            </flux:table.cell>
+        
+                            <flux:table.cell>
+                                <flux:button
+                                    wire:click="updateStock({{ $product['id'] }})"
+                                    variant="primary"
+                                    color="blue"
+                                    size="sm"
+                                >
+                                    Update Stock
+                                </flux:button>
+                            </flux:table.cell>
+        
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        </div>
+    </div>
+
+    <flux:modal wire:model="showUpdate" class="w-full max-w-4xl flex flex-col gap-4">
+        @if(isset($selectedProduct))
+        <div>
+            <div class="rounded-xl border p-4">
+                <h3 class="mb-4 font-semibold">
+                    Product Details
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        @if(isset($selectedProduct->images[0]))
+                            <img
+                                src="{{ asset('storage/'.$selectedProduct->images[0]->image) }}"
+                                class="h-16 w-16 shrink-0 rounded-lg object-cover"
+                            >
+                        @endif
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium truncate">
+                                {{ $selectedProduct['name'] }}
+                            </div>
+                            <div class="text-sm text-zinc-500">
+                                Stock: {{ $selectedProduct->stock}}
+                            </div>
+                        </div>
+                        <div class="shrink-0 font-medium">
+                            ₹{{ number_format($selectedProduct->price, 2) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <flux:input
+                    wire:model="stock"
+                    name="stock"
+                    :label="__('Product stock')"
+                    type="number"
+                    :placeholder="__('Enter Product stock...')"
+                />
+        <flux:table.cell variant="strong">
+            <flux:button wire:click="update({{$selectedProduct['id']}})" variant="primary" color="blue" size="sm">Update</flux:button>
+        </flux:table.cell>
+        @endif
+    </flux:modal>
+    @endif
 </div>

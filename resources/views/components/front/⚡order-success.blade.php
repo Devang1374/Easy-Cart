@@ -55,6 +55,12 @@ new class extends Component
 
                     }
 
+                    if ($order->coupon_id) {
+
+                        $order->coupon()->increment('used_count');
+
+                    }
+
                 }
             }
 
@@ -253,12 +259,45 @@ new class extends Component
             Order Summary
         </h2>
 
-        <div class="mt-4 flex items-center justify-between">
-            <span>Total Amount</span>
+        <div class="mt-4 space-y-3">
 
-            <span class="text-2xl font-black">
-                ₹{{ number_format($order->total_amount, 2) }}
-            </span>
+            <div class="flex justify-between">
+                <span>Subtotal</span>
+
+                <span>
+                    ₹{{ number_format($order->total_amount + $order->discount_amount, 2) }}
+                </span>
+            </div>
+
+            @if($order->discount_amount > 0)
+
+                <div class="flex justify-between text-green-600">
+
+                    <span>
+                        Discount
+                        @if($order->coupon)
+                            ({{ $order->coupon->code }})
+                        @endif
+                    </span>
+
+                    <span>
+                        -₹{{ number_format($order->discount_amount, 2) }}
+                    </span>
+
+                </div>
+
+            @endif
+
+            <div class="border-t pt-3 flex justify-between text-2xl font-black">
+
+                <span>Total</span>
+
+                <span>
+                    ₹{{ number_format($order->total_amount, 2) }}
+                </span>
+
+            </div>
+
         </div>
 
     </div>

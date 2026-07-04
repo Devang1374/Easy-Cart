@@ -2,9 +2,10 @@
 
 use Livewire\Component;
 
+use App\Models\Coupon;
+use App\Models\product;
 use App\Models\orderItems;
 use App\Models\orderTable;
-use App\Models\product;
 use App\Models\UserAddress;
 
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,11 @@ new class extends Component
             $this->pincode = $order['pincode'];
             $this->state = $order['state'];
 
+            $this->appliedCoupon = $order->coupon;
+            if(!empty($order['coupon_code'])){
+                $this->couponCode = $order['coupon_code'];
+            }
+
             foreach($items as $item){
                 $product = product::where('id', $item['product_id'])->first();
 
@@ -89,18 +95,26 @@ new class extends Component
 
     public function getCartTotalProperty()
     {
-        
-        return collect($this->cart)
-            ->sum(function ($item) {
-                $productPrice = product::where('id', $item['id'])->value('price');
-                if($item['price'] != $productPrice){
-                    $item['price'] = $productPrice;
-                    $this->cart[$item['id']]['price']= $productPrice;
-                    session()->put('cart', $this->cart);
-                    $this->dispatch('product-update');
-                }
-                return $item['price'] * $item['quantity'];
-            });
+        if(!empty($this->order_id)){
+            $order_items = orderItems::where('order_table_id', $this->order_id)->get();
+            $total = 0;
+            foreach($order_items as $item){
+                $total += $item['price'] * $item['quantity'];
+            }
+            return $total;
+        }else{
+            return collect($this->cart)
+                ->sum(function ($item) {
+                    $productPrice = product::where('id', $item['id'])->value('price');
+                    if($item['price'] != $productPrice){
+                        $item['price'] = $productPrice;
+                        $this->cart[$item['id']]['price']= $productPrice;
+                        session()->put('cart', $this->cart);
+                        $this->dispatch('product-update');
+                    }
+                    return $item['price'] * $item['quantity'];
+                });
+        }
     }
 
     public function placeOrder()
@@ -164,7 +178,13 @@ new class extends Component
                 'state'   => $this->state,
                 'pincode' => $this->pincode,
             
-                'total_amount' => $this->cartTotal,
+                'total_amount' => $this->finalTotal,
+
+                'coupon_id' => $this->appliedCoupon?->id,
+
+                'coupon_code' => $this->appliedCoupon?->code,
+
+                'discount_amount' => $this->discount,
             
                 'status' => 'pending',
             ]);
@@ -255,6 +275,66 @@ new class extends Component
             ]);
 
             }else{
+                if($this->couponEdited){
+                    $order = orderTable::where('id', $this->order_id)->first();
+
+                    $order->update([
+                        "order_number" => $this->generateOrderNumber(),
+                        'total_amount' => $this->finalTotal,
+                    ]);
+
+                    $curl = curl_init();
+
+                    curl_setopt_array($curl, [
+                        CURLOPT_URL => "https://sandbox.cashfree.com/pg/orders",
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_ENCODING => "",
+                        CURLOPT_MAXREDIRS => 10,
+                        CURLOPT_TIMEOUT => 30,
+                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                        CURLOPT_CUSTOMREQUEST => "POST",
+                        CURLOPT_POSTFIELDS => json_encode([
+                            'order_id' => $order->order_number,
+                            'order_currency' => 'INR',
+                            'order_amount' => (float) $order->total_amount,
+
+                            'customer_details' => [
+                                'customer_id' => (string) auth()->id(),
+                                'customer_name' => $order->first_name . ' ' . $order->last_name,
+                                'customer_email' => $order->email,
+                                'customer_phone' => $order->phone,
+                            ],
+
+                            'order_meta' => [
+                                'return_url' => route(
+                                    'user/order-success',
+                                    ['order_id' => $order->order_number]
+                                ),
+                            ],
+                        ]),
+                        CURLOPT_HTTPHEADER => [
+                            "Content-Type: application/json",
+                            "x-api-version: 2025-01-01",
+                            "x-client-id: " . env('CASHFREE_APP_ID'),
+                            "x-client-secret: " . env('CASHFREE_SECRET_KEY'),
+                        ],
+                    ]);
+
+                    $response = curl_exec($curl);
+                    $error = curl_error($curl);
+
+                    curl_close($curl);
+
+                    if ($error) {
+                        dd($error);
+                    }
+
+                    $result = json_decode($response, true);
+
+                    orderTable::where('id', $order->id)->update([
+                        'cf_payment_id' => $result['payment_session_id']
+                    ]);
+                }
                 $order = orderTable::where('id', $this->order_id)->first();
                 $order->update([
                     'first_name' => $this->first_name,
@@ -268,13 +348,19 @@ new class extends Component
                     'state'   => $this->state,
                     'pincode' => $this->pincode,
 
-                    'total_amount' => $this->cartTotal,
+                    'total_amount' => $this->finalTotal,
+
+                    'coupon_id' => $this->appliedCoupon?->id,
+
+                    'coupon_code' => $this->appliedCoupon?->code,
+
+                    'discount_amount' => $this->discount,
                 ]);
             }
 
             session()->forget('cart');
             
-            $this->paymentSessionId = $result['payment_session_id'] ?? $order['cf_payment_id'];
+            $this->paymentSessionId = $order['cf_payment_id'];
 
             $this->dispatch('start-payment', ['paymentSessionId' => $this->paymentSessionId]);
         });
@@ -416,6 +502,138 @@ new class extends Component
             heading: 'Address Deleted',
             text: 'The address has been removed successfully.'
         );
+    }
+
+    public string $couponCode = '';
+    public ?\App\Models\Coupon $appliedCoupon = null;
+
+    public $couponEdited = null;
+    public function applyCoupon()
+    {
+        $this->couponEdited = true;
+
+        $this->validate([
+            'couponCode' => 'required|string',
+        ]);
+
+        $coupon = Coupon::where('code', strtoupper(trim($this->couponCode)))
+            ->where('is_active', true)
+            ->first();
+
+        if (! $coupon) {
+
+            Flux::toast(
+                variant: 'danger',
+                heading: 'Invalid Coupon',
+                text: 'Coupon code does not exist.'
+            );
+
+            return;
+        }
+
+        // Not started yet
+        if ($coupon->starts_at && now()->lt($coupon->starts_at)) {
+
+            Flux::toast(
+                variant: 'danger',
+                heading: 'Coupon Not Started',
+                text: 'This coupon is not available yet.'
+            );
+
+            return;
+        }
+
+        // Expired
+        if ($coupon->expires_at && now()->gt($coupon->expires_at)) {
+
+            Flux::toast(
+                variant: 'danger',
+                heading: 'Coupon Expired',
+                text: 'This coupon has expired.'
+            );
+
+            return;
+        }
+
+        // Minimum order amount
+        if ($this->cartTotal < $coupon->minimum_amount) {
+
+            Flux::toast(
+                variant: 'danger',
+                heading: 'Minimum Order Required',
+                text: 'Minimum order amount is ₹' . number_format($coupon->minimum_amount, 2)
+            );
+
+            return;
+        }
+
+        // Usage limit
+        if (
+            !is_null($coupon->usage_limit) &&
+            $coupon->used_count >= $coupon->usage_limit
+        ) {
+
+            Flux::toast(
+                variant: 'danger',
+                heading: 'Coupon Limit Reached',
+                text: 'This coupon is no longer available.'
+            );
+
+            return;
+        }
+
+        $this->appliedCoupon = $coupon;
+
+        Flux::toast(
+            heading: 'Coupon Applied',
+            text: 'Coupon applied successfully.'
+        );
+    }
+
+    public function removeCoupon()
+    {
+        $this->appliedCoupon = null;
+        $this->couponCode = "";
+
+        $this->couponEdited = true;
+
+        if(!empty($this->order_id)){
+            orderTable::where('id', $this->order_id)->update([
+                'coupon_id' => null,
+                'coupon_code' => null
+            ]);
+        }
+
+        Flux::toast(
+            heading: 'Coupon Removed',
+            text: 'The coupon has been removed.'
+        );
+    }
+
+    public function getDiscountProperty()
+    {
+        if (!$this->appliedCoupon) {
+            return 0;
+        }
+
+        $coupon = $this->appliedCoupon;
+
+        if ($coupon->type === 'fixed') {
+            return min($coupon->value, $this->cartTotal);
+        }
+
+        $discount = ($this->cartTotal * $coupon->value) / 100;
+
+        if ($coupon->maximum_discount) {
+            $discount = min($discount, $coupon->maximum_discount);
+        }
+
+        return round($discount, 2);
+    }
+
+    public function getFinalTotalProperty()
+    {
+        return max(0, $this->cartTotal - $this->discount);
     }
 };
 ?>
@@ -648,14 +866,77 @@ new class extends Component
 
                 <div class="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">
 
-                    <div class="flex justify-between text-lg font-bold">
+                @if(!$appliedCoupon)
 
+                    <flux:input
+                        wire:model.live="couponCode"
+                        label="Coupon Code"
+                        placeholder="Enter coupon code"
+                    />
+
+                    <flux:button
+                        wire:click="applyCoupon"
+                        class="mt-3 w-full"
+                        variant="filled"
+                    >
+                        Apply Coupon
+                    </flux:button>
+
+                @else
+
+                    <div class="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+
+                        <div class="flex items-center justify-between">
+
+                            <div>
+
+                                <p class="font-semibold text-green-700 dark:text-green-300">
+                                    Coupon Applied
+                                </p>
+
+                                <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                    {{ $appliedCoupon->code }}
+                                </p>
+
+                            </div>
+
+                            <flux:button
+                                wire:click="removeCoupon"
+                                size="sm"
+                                variant="danger"
+                            >
+                                Remove
+                            </flux:button>
+
+                        </div>
+
+                    </div>
+
+                @endif
+
+                </div>
+                <div class="mt-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+
+                    @if($appliedCoupon)
+
+                        <div class="mb-2 flex justify-between text-green-600">
+                            <span>
+                                Discount ({{ $appliedCoupon->code }})
+                            </span>
+
+                            <span>
+                                -₹{{ number_format($this->discount, 2) }}
+                            </span>
+                        </div>
+
+                    @endif
+
+                    <div class="mt-4 flex justify-between border-t pt-4 text-lg font-bold">
                         <span>Total</span>
 
                         <span>
-                            ₹{{ number_format($this->cartTotal, 2) }}
+                            ₹{{ number_format($this->finalTotal, 2) }}
                         </span>
-
                     </div>
 
                 </div>

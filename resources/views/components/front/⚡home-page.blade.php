@@ -2,9 +2,11 @@
 
 use Livewire\Component;
 
+// all database models that is used
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Wishlist;
+use App\Models\Banner;
 
 new class extends Component
 {
@@ -12,8 +14,16 @@ new class extends Component
     public $featuredProducts;
     public $latestProducts;
 
-    public array $wishlist = [];
+    // get the hero Banners from database
+    public function getHeroBannersProperty()
+    {
+        return Banner::active()
+            ->where('position', 'hero')
+            ->orderBy('sort_order')
+            ->get();
+    }
 
+    // mount the initial products and categories
     public function mount()
     {
         $this->categories = Category::query()->where('is_active', true)->latest()->take(8)->get();
@@ -27,6 +37,8 @@ new class extends Component
         }
     }
 
+    // add and remove product from whishlist
+    public array $wishlist = [];
     public function toggleWishlist($productId)
     {
         if (! auth()->check()) {
@@ -75,51 +87,230 @@ new class extends Component
 
 
 <div>
+    <!-- hero section -->
+    <section class="relative overflow-hidden min-h-[700px]">
 
-    <section class="relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-950"></div>
-    
-        <div class="absolute inset-0 opacity-20">
-            <div class="absolute left-10 top-10 h-72 w-72 rounded-full bg-blue-500 blur-3xl"></div>
-            <div class="absolute right-10 bottom-10 h-72 w-72 rounded-full bg-purple-500 blur-3xl"></div>
-        </div>
-    
-        <div class="relative mx-auto max-w-7xl px-6 py-24 lg:py-32">
-    
-            <div class="max-w-3xl">
-    
-                <span class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-1 text-sm text-white backdrop-blur">
-                    ✨ New Products Added Weekly
-                </span>
-    
-                <h1 class="mt-6 text-5xl font-black leading-tight text-white lg:text-7xl">
-                    Discover Products You'll Actually Love
-                </h1>
-    
-                <p class="mt-6 max-w-2xl text-lg text-zinc-300">
-                    Browse our curated collection of premium products with fast shipping,
-                    secure checkout and great prices.
-                </p>
-    
-                <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
-                    <a href="#featured-products">
-                        <button class="rounded-xl px-6 py-3 font-medium text-black bg-white transition hover:bg-white/90">
-                            Show Now
-                        </button>
-                    </a>
+        <div class="hero-slider splide">
 
-                    <a wire:navigate href="/user/product">
-                        <button class="rounded-xl border border-white/20 px-6 py-3 font-medium text-white transition hover:bg-white/10">
-                            Explore Products
-                        </button>
-                    </a>
-                </div>
-    
+            <div class="splide__track">
+
+                <ul class="splide__list">
+
+                    {{-- Default Hero --}}
+                    <li class="splide__slide">
+
+                        <section class="relative overflow-hidden min-h-[700px]">
+
+                            <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-950"></div>
+
+                            <div class="absolute inset-0 opacity-20">
+                                <div class="absolute left-10 top-10 h-72 w-72 rounded-full bg-blue-500 blur-3xl"></div>
+                                <div class="absolute right-10 bottom-10 h-72 w-72 rounded-full bg-purple-500 blur-3xl"></div>
+                            </div>
+
+                            <div class="relative mx-auto flex min-h-[700px] max-w-7xl items-center px-8">
+
+                                <div class="max-w-3xl">
+
+                                    <span class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white backdrop-blur">
+                                        ✨ New Products Added Weekly
+                                    </span>
+
+                                    <h1 class="mt-6 text-5xl font-black leading-tight text-white lg:text-7xl">
+                                        Discover Products You'll Actually Love
+                                    </h1>
+
+                                    <p class="mt-6 max-w-2xl text-lg text-zinc-300">
+                                        Browse our curated collection of premium products with fast shipping,
+                                        secure checkout and great prices.
+                                    </p>
+
+                                    <div class="mt-10 flex flex-wrap gap-4">
+
+                                        <a href="#featured-products">
+                                            <button class="rounded-xl bg-white px-7 py-4 font-semibold text-black transition hover:scale-105">
+                                                Shop Now
+                                            </button>
+                                        </a>
+
+                                        <a wire:navigate href="/user/product">
+                                            <button class="rounded-xl border border-white/20 bg-white/5 px-7 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/10">
+                                                Explore Products
+                                            </button>
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </li>
+
+                    {{-- Dynamic Banners --}}
+                    @foreach($this->heroBanners as $banner)
+<div class="absolute top-4 left-4 z-50 text-white bg-black/50 px-2 py-1 rounded">
+    {{ $banner->background_type }}
+    <br>
+    {{ $banner->background_color }}
+</div>
+                        <li class="splide__slide">
+
+                            <section class="relative overflow-hidden min-h-[700px]">
+                            
+                                {{-- Background --}}
+                                @if($banner->background_type === 'gradient')
+                            
+                                    <div
+                                        class="absolute inset-0"
+                                        style="background:linear-gradient(135deg, {{ $banner->background_color }}, #0f172a);"
+                                    ></div>
+                            
+                                @elseif($banner->background_type === 'solid')
+                            
+                                    <div
+                                        class="absolute inset-0"
+                                        style="background:{{ $banner->background_color }};"
+                                    ></div>
+                            
+                                @elseif($banner->background_type === 'image')
+                            
+                                    <div
+                                        class="absolute inset-0 bg-cover bg-center"
+                                        style="background-image:url('{{ asset('storage/'.$banner->background_image) }}');"
+                                    ></div>
+                            
+                                @elseif($banner->background_type === 'gradient-image')
+                            
+                                    <div
+                                        class="absolute inset-0 bg-cover bg-center"
+                                        style="background-image:url('{{ asset('storage/'.$banner->background_image) }}');"
+                                    ></div>
+                            
+                                    <div
+                                        class="absolute inset-0"
+                                        style="background:linear-gradient(135deg, {{ $banner->background_color }}cc, rgba(15,23,42,.75));"
+                                    ></div>
+                            
+                                @endif
+
+                                {{-- Background Effects --}}
+                                <div class="absolute inset-0 overflow-hidden pointer-events-none">
+
+                                    @if(in_array($banner->background_type, ['gradient', 'solid', 'gradient-image']))
+
+                                        <div
+                                            class="absolute -top-40 -left-40 h-[32rem] w-[32rem] rounded-full opacity-20 blur-[140px]"
+                                            style="background: {{ $banner->background_color }};"
+                                        ></div>
+
+                                    @endif
+
+                                    <div class="absolute right-0 bottom-0 h-[38rem] w-[38rem] rounded-full bg-white/10 blur-[170px]"></div>
+
+                                </div>
+
+                                <div class="relative mx-auto grid min-h-[700px] max-w-7xl items-center gap-10 px-8 lg:grid-cols-2">
+
+                                    {{-- LEFT --}}
+                                    <div class="z-10">
+
+                                        @if($banner->subtitle)
+
+                                            <span class="inline-flex rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium text-white backdrop-blur">
+                                                {{ $banner->subtitle }}
+                                            </span>
+
+                                        @endif
+
+                                        <h1 class="mt-6 text-5xl font-black leading-tight text-white lg:text-7xl">
+                                            {{ $banner->title }}
+                                        </h1>
+
+                                        @if($banner->description)
+
+                                            <p class="mt-8 max-w-xl text-lg leading-8 text-white/80">
+                                                {{ $banner->description }}
+                                            </p>
+
+                                        @endif
+
+                                        <div class="mt-10 flex flex-wrap gap-4">
+
+                                            @if($banner->button_text)
+
+                                                <a
+                                                    href="{{ $banner->button_link }}"
+                                                    class="rounded-xl bg-white px-8 py-4 font-semibold text-black transition duration-300 hover:scale-105"
+                                                >
+                                                    {{ $banner->button_text }}
+                                                </a>
+
+                                            @endif
+
+                                            @if($banner->secondary_button_text)
+
+                                                <a
+                                                    href="{{ $banner->secondary_button_link }}"
+                                                    class="rounded-xl border border-white/20 bg-white/5 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/10"
+                                                >
+                                                    {{ $banner->secondary_button_text }}
+                                                </a>
+
+                                            @endif
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Right -->
+                                    <div class="hero-image relative flex items-center justify-center lg:justify-center px-6 lg:px-12">
+
+                                        {{-- Luxury Blue Glow --}}
+                                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+
+                                            <div class="absolute h-[600px] w-[600px] rounded-full bg-sky-500/15 blur-[170px]"></div>
+
+                                            <div class="absolute h-[420px] w-[420px] rounded-full bg-cyan-400/20 blur-[110px]"></div>
+
+                                            <div class="absolute h-[260px] w-[260px] rounded-full bg-white/30 blur-[60px]"></div>
+
+                                        </div>
+
+                                        {{-- Decorative Ring --}}
+                                        <div
+                                            class="absolute h-[38rem] w-[38rem] rounded-full border border-white/10"
+                                        ></div>
+
+                                        @if($banner->desktop_image)
+                                            <img
+                                                src="{{ asset('storage/'.$banner->desktop_image) }}"
+                                                alt="{{ $banner->title }}"
+                                                class="relative z-10 mx-auto max-h-[500px] max-w-full object-contain drop-shadow-[0_35px_60px_rgba(0,0,0,.45)] transition duration-500 hover:scale-105"
+                                            >
+                                        @endif
+
+                                    </div>
+
+                                </div>
+
+                            </section>
+
+                        </li>
+
+                    @endforeach
+
+                </ul>
+
             </div>
-    
+
         </div>
+
     </section>
 
+    <!-- categories section -->
     <section class="mx-auto max-w-7xl px-6 py-20">
 
         <div class="mb-10 flex items-center justify-between">
@@ -173,6 +364,7 @@ new class extends Component
 
     </section>
 
+    <!-- featured products section -->
     <section id="featured-products" class="relative overflow-hidden py-24">
 
         {{-- Background Effects --}}
@@ -332,6 +524,7 @@ new class extends Component
         
     </section>
 
+    <!-- latest product section -->
     <section id="latest-products" class="mx-auto max-w-7xl px-6 py-20">
 
         <div class="mb-10 flex items-center justify-between">

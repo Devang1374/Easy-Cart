@@ -8,7 +8,10 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-    <div class="flex min-h-screen flex-col">
+    <div  
+        x-data
+        @keydown.window.ctrl.k.prevent="$flux.modal('quick-access').show()"
+        class="flex min-h-screen flex-col">
         
         {{-- Top Announcement Bar --}}
         <div class="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
@@ -38,7 +41,35 @@
 
                 {{-- Search (Desktop Only) --}}
                 <div class="hidden w-full max-w-md px-4 lg:block">
-                    <flux:input icon="magnifying-glass" placeholder="Search products..." />
+
+                    <flux:modal.trigger name="quick-access">
+
+                        <button
+                            type="button"
+                            class="flex h-10 w-full items-center justify-between rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-500 transition hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+                        >
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-5 w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+
+                                <span>Search products, orders, pages...</span>
+                            </div>
+
+                            <kbd class="rounded border border-zinc-300 bg-zinc-100 px-2 py-0.5 text-xs dark:border-zinc-600 dark:bg-zinc-800">
+                                Ctrl K
+                            </kbd>
+                        </button>
+
+                    </flux:modal.trigger>
+
                 </div>
 
                 {{-- Right Side Actions --}}
@@ -166,6 +197,8 @@
             </div>
         </footer>
     </div>
+
+    <livewire:front.quick-access/>
 
     @persist('toast')
         <flux:toast.group>

@@ -12,6 +12,8 @@ Route::middleware(['auth', 'admin'])->group(function(){
     Route::get('category', [AdminController::class, 'category'])->name('category');
     Route::get('orderPage', [AdminController::class, 'orderPage'])->name('orderPage');
     Route::get('analytics', [AdminController::class, 'analytics'])->name('analytics');
+    Route::get('coupon', [AdminController::class, 'coupon'])->name('coupon');
+    Route::get('banner', [AdminController::class, 'banner'])->name('banner');
 });
 
 require __DIR__.'/settings.php';

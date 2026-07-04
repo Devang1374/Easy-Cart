@@ -4,12 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class orderTable extends Model
 {
     public function items()
     {
         return $this->hasMany(orderItems::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     protected $fillable = [
@@ -32,6 +38,10 @@ class orderTable extends Model
 
         'cf_payment_id',
         'pyment',
-        'cashfree_order_id'
+        'cashfree_order_id',
+
+        'coupon_id',
+        'coupon_code',
+        'discount_amount',
     ];
 }
