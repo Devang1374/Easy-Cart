@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies();    
 
+        $middleware->validateCsrfTokens(except: [
+            'livewire/*',
+        ]);
+
         $middleware->alias([
             'admin' => AdminMiddleware::class
         ]);
