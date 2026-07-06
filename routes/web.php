@@ -48,3 +48,7 @@ $imageUrl = $upload['secure_url'];
 $publicId = $upload['public_id'];
 
 });
+
+Route::get('/test-auth', function () {
+    return auth()->check() ? 'logged in' : 'not logged in';
+})->middleware('web');
