@@ -19,7 +19,7 @@ new class extends Component
             return collect();
         }
 
-        return Product::with(['images', 'category'])
+        return product::with(['images', 'category'])
             ->where('name', 'like', '%' . $this->search . '%')
             ->take(6)
             ->get();

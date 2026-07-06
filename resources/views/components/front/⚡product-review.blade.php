@@ -4,8 +4,8 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 use App\Models\Review;
-use App\Models\Product;
-use App\Models\OrderItems;
+use App\Models\product;
+use App\Models\orderItems;
 
 use App\Services\CloudinaryService;
 
@@ -13,9 +13,9 @@ new class extends Component
 {
     use WithFileUploads;
 
-    public Product $product;
+    public product $product;
 
-    public function mount(Product $product)
+    public function mount(product $product)
     {
         $this->product = $product;
     }

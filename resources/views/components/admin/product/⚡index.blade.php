@@ -5,7 +5,7 @@ use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 
-use App\Models\category;
+use App\Models\Category;
 use App\Models\product;
 
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +21,7 @@ new class extends Component
     public function mount(){
         $this->message = "";
         $this->create = false;
-        $this->categories = category::latest()->get();
+        $this->categories = Category::latest()->get();
     }
 
     public $selectedCategory = "";

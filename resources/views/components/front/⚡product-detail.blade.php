@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Component;
-use App\Models\Product;
+use App\Models\product;
 
 new class extends Component
 {
@@ -14,7 +14,7 @@ new class extends Component
 
     public function mount()
     {
-        $this->product = Product::query()
+        $this->product = product::query()
             ->with([
                 'images',
                 'category',
@@ -25,7 +25,7 @@ new class extends Component
 
         $this->selectedImage = $this->product->images->first()?->image;
 
-        $this->relatedProducts = Product::query()
+        $this->relatedProducts = product::query()
             ->with('images')
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)

@@ -4,7 +4,7 @@ use Livewire\Component;
 
 // all database models that is used
 use App\Models\Category;
-use App\Models\Product;
+use App\Models\product;
 use App\Models\Wishlist;
 use App\Models\Banner;
 
@@ -27,8 +27,8 @@ new class extends Component
     public function mount()
     {
         $this->categories = Category::query()->where('is_active', true)->latest()->take(8)->get();
-        $this->featuredProducts = Product::query()->with('images')->where('is_active', true)->where('featured', true)->latest()->take(8)->get();
-        $this->latestProducts = Product::query()->with('images')->where('is_active', true)->latest()->take(8)->get();
+        $this->featuredProducts = product::query()->with('images')->where('is_active', true)->where('featured', true)->latest()->take(8)->get();
+        $this->latestProducts = product::query()->with('images')->where('is_active', true)->latest()->take(8)->get();
 
         if (auth()->check()) {
             $this->wishlist = Wishlist::where('user_id', auth()->id())
