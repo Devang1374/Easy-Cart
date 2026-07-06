@@ -1,19 +1,35 @@
-# ---------- Stage 1: Build frontend ----------
+# ---------- Stage 1: Composer ----------
+FROM composer:2 AS composer
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-scripts
+
+COPY . .
+RUN composer dump-autoload --optimize
+
+
+# ---------- Stage 2: Build Vite ----------
 FROM node:22 AS frontend
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy application including vendor from composer stage
+COPY --from=composer /app /app
+
 RUN npm install
 
-COPY . .
 RUN npm run build
 
 
-# ---------- Stage 2: PHP ----------
+# ---------- Stage 3: Production ----------
 FROM php:8.5.7-apache
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -26,30 +42,26 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     default-mysql-client \
-    && docker-php-ext-install \
-        pdo \
-        pdo_mysql \
-        mbstring \
-        zip \
-        exif \
-        pcntl \
-        bcmath \
-    && a2enmod rewrite
+ && docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    mbstring \
+    zip \
+    exif \
+    pcntl \
+    bcmath \
+ && a2enmod rewrite \
+ && rm -rf /var/lib/apt/lists/*
 
-# Configure Apache
 RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
     /etc/apache2/sites-available/*.conf \
     /etc/apache2/apache2.conf
 
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
 WORKDIR /var/www/html
 
-# Copy project
-COPY . .
+COPY --from=composer /app ./
+COPY --from=frontend /app/public/build ./public/build
 
-# Create Laravel directories
 RUN mkdir -p \
     storage/framework/cache \
     storage/framework/sessions \
@@ -57,19 +69,8 @@ RUN mkdir -p \
     storage/logs \
     bootstrap/cache
 
-# Set permissions
-RUN chown -R www-data:www-data storage bootstrap/cache
-RUN chmod -R 775 storage bootstrap/cache
-
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-RUN php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
-
-# Copy Vite build
-COPY --from=frontend /app/public/build ./public/build
+RUN chown -R www-data:www-data storage bootstrap/cache \
+ && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
 
