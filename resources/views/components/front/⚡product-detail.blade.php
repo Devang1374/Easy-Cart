@@ -113,7 +113,7 @@ new class extends Component
         {{-- Gallery --}}
         <div class="overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800">
             <img
-                src="{{ asset('storage/'.$selectedImage) }}"
+                src="{{ $selectedImage }}"
                 class="h-[500px] w-full object-cover"
             >
 
@@ -127,7 +127,7 @@ new class extends Component
                     >
 
                         <img
-                            src="{{ asset('storage/'.$image->image) }}"
+                            src="{{ $image->image }}"
                             class="h-20 w-20 object-cover"
                         >
 
@@ -285,6 +285,7 @@ new class extends Component
 
     </section>
 
+    @if(!empty($relatedProducts[0]))
     <section class="mt-20">
 
         <div class="mb-8">
@@ -313,7 +314,7 @@ new class extends Component
                         @if(isset($related->images[0]))
 
                             <img
-                                src="{{ asset('storage/'.$related->images[0]->image) }}"
+                                src="{{ $related->images[0]->image }}"
                                 class="h-60 w-full object-cover transition duration-500 group-hover:scale-105"
                             >
 
@@ -340,4 +341,5 @@ new class extends Component
         </div>
 
     </section>
+    @endif
 </div>

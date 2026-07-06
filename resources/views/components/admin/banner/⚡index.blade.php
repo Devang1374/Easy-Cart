@@ -7,6 +7,8 @@ use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use App\Models\Banner;
 
+use App\Services\CloudinaryService;
+
 new class extends Component
 {
     #[on('banner-update')]
@@ -37,20 +39,16 @@ new class extends Component
     }
 
     public function delete($id){
-        $oldPath = Banner::where('id', $id)->value('mobile_image');
-        if(!empty($oldPath)){
-            Storage::disk('public')->delete($oldPath);
-        }
+        $oldPath = Banner::where('id', $id)->value('mobile_image_id');
+            app(CloudinaryService::class)->destroy($oldPath);
 
-        $oldPath = Banner::where('id', $id)->value('desktop_image');
-        if(!empty($oldPath)){
-            Storage::disk('public')->delete($oldPath);
-        }
+        $oldPath = Banner::where('id', $id)->value('desktop_image_id');
+            app(CloudinaryService::class)
+                    ->destroy($oldPath);
 
-        $oldPath = Banner::where('id', $id)->value('background_image');
-        if(!empty($oldPath)){
-            Storage::disk('public')->delete($oldPath);
-        }
+        $oldPath = Banner::where('id', $id)->value('background_image_id');
+           app(CloudinaryService::class)
+                    ->destroy($oldPath);
 
         Banner::where('id', $id)->delete();
         $this->message = "Banner Deleted Successfully";
@@ -133,7 +131,7 @@ new class extends Component
         
                             @if($banner->desktop_image)
                                 <img
-                                    src="{{ asset('storage/'.$banner->desktop_image) }}"
+                                    src="{{ $banner->desktop_image }}"
                                     class="h-14 w-24 rounded-lg object-cover"
                                 >
                             @else

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Models\product;
 
+use App\Services\CloudinaryService;
+
 new class extends Component
 {
     use WithFileUploads;
@@ -86,13 +88,15 @@ new class extends Component
 
         if(!empty($this->image_file)){    
             foreach ($this->image_file as $index => $image) {
-                $path = $image->store(
-                    'products',
-                    'public'
-                );
+                $upload = app(CloudinaryService::class)
+                    ->upload($image, 'easycart/products');
+
+                $path = $upload['secure_url'];
+                $image_id = $upload['public_id'];
 
                 $product->images()->create([
                     'image' => $path,
+                    'image_id' => $image_id,
                     'sort_order' => $index,
                 ]);
             }
@@ -109,21 +113,22 @@ new class extends Component
                 $images = $product->images()->get();
 
                 foreach($images as $img){
-                    if(Storage::disk('public')->exists($img['image'])){
-                        Storage::disk('public')->delete($img['image']);
-                    }
+                    app(CloudinaryService::class)
+                        ->destroy($img->image_id);
                 }
 
                 $product->images()->where('product_id', $this->edit_id)->delete();
 
                 foreach ($this->image_file as $index => $image) {
-                    $path = $image->store(
-                        'products',
-                        'public'
-                    );
+                    $upload = app(CloudinaryService::class)
+                        ->upload($image, 'easycart/products');
+
+                    $path = $upload['secure_url'];
+                    $image_id = $upload['public_id'];
     
                     $product->images()->create([
                         'image' => $path,
+                        'image_id' => $image_id,
                         'sort_order' => $index,
                     ]);
                 }
@@ -241,7 +246,7 @@ new class extends Component
                 <div class="grid grid-cols-4 gap-4">
                     @foreach($images as $image)
                         <img
-                            src="{{asset('storage/'.$image) }}"
+                            src="{{ $image }}"
                             class="w-32 h-32 object-cover rounded"
                         >
                     @endforeach

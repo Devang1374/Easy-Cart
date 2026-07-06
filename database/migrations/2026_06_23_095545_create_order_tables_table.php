@@ -41,6 +41,12 @@ return new class extends Migration
                 ->default('pending');
 
             $table->timestamps();
+            
+            $table->foreignId('coupon_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->string('coupon_code')->nullable();
+
+            $table->decimal('discount_amount', 10, 2)->default(0);
         });
     }
 

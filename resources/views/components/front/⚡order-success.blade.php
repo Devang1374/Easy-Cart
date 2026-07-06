@@ -38,32 +38,6 @@ new class extends Component
             $response = curl_exec($curl);
             $this->data = json_decode($response, true);
 
-            if ($this->data['order_status'] === "PAID") {
-
-                if ($order && $order->pyment !== 'PAID') {
-
-                    $order->update([
-                        'pyment' => 'PAID'
-                    ]);
-
-                    foreach ($order->items as $item) {
-
-                        $item->product->decrement(
-                            'stock',
-                            $item->quantity
-                        );
-
-                    }
-
-                    if ($order->coupon_id) {
-
-                        $order->coupon()->increment('used_count');
-
-                    }
-
-                }
-            }
-
             $err = curl_error($curl);
 
             curl_close($curl);
@@ -438,7 +412,7 @@ new class extends Component
 
                         @if(isset($item->product->images[0]))
                             <img
-                                src="{{ asset('storage/'.$item->product->images[0]->image) }}"
+                                src="{{ $item->product->images[0]->image }}"
                                 alt="{{ $item->product_name }}"
                                 class="h-full w-full object-cover"
                             >

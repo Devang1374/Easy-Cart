@@ -16,6 +16,7 @@ return new class extends Migration
             
             $table->foreignId('review_id')->constrained()->cascadeOnDelete();
             $table->string('image');
+            $table->string('image_id');
             
             $table->timestamps();
         });

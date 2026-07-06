@@ -37,9 +37,14 @@ Route::get('user/productDetails/{slug}', [UserController::class, 'productDetails
 use App\Mail\notification;
 use Illuminate\Support\Facades\Mail;
 
-Route::get('/notification', function(){
-    Mail::to('yakshparmar123@email.com')
-        ->send(new notification());
+use App\Services\CloudinaryService;
 
-    return 'Sent';
+Route::get('/cloudinary-test', function () {
+
+$upload = app(CloudinaryService::class)
+    ->upload('test.jpg', 'easycart/products');
+
+$imageUrl = $upload['secure_url'];
+$publicId = $upload['public_id'];
+
 });

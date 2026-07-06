@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Models\Category;
 
+use App\Services\CloudinaryService;
+
 new class extends Component
 {
     use WithFileUploads;
@@ -41,10 +43,11 @@ new class extends Component
         $path = "not set";
 
         if(!empty($this->image)){
-            $path = $this->image->store(
-                            'category',
-                            'public'
-                        );
+            $upload = app(CloudinaryService::class)
+                ->upload($this->image, 'easycart/categories');
+
+            $path = $upload['secure_url'];
+            $publicId = $upload['public_id'];
         }
 
         if(empty($this->edit_id)){
@@ -57,6 +60,7 @@ new class extends Component
                 "name" => $this->title,
                 "slug" => $this->slug,
                 "image" => $path,
+                "image_id" => $publicId,
                 "is_active" => $this->active,
             ]);
 
@@ -67,21 +71,17 @@ new class extends Component
                 'title' => 'required|min:3',
             ]);
 
-            $path = Category::where('id', $this->edit_id)->value('image');
-
             if(!empty($this->image)){
-                
-
-                $path = $this->image->store(
-                                'category',
-                                'public'
-                            );
+                $image_id = Category::where('id', $this->edit_id)->value('image_id');
+                app(CloudinaryService::class)
+                    ->destroy($image_id);
             }
 
             Category::where('id', $this->edit_id)->update([
                 "name" => $this->title,
                 "slug" => $this->slug,
                 "image" => $path,
+                "image_id" => $publicId,
                 "is_active" => $this->active,
             ]);
 
@@ -130,7 +130,7 @@ new class extends Component
             
             @if(!empty($image_path) && empty($image))
                 <img
-                    src="{{asset('storage/'.$image_path) }}"
+                    src="{{ $image_path }}"
                     class="w-32 h-32 object-cover rounded"
                 >
             @elseif(!empty($image))

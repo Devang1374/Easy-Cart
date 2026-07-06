@@ -280,7 +280,7 @@ new class extends Component
                     <div class="overflow-hidden">
                         @if(isset($product->images[0]))
                             <img
-                                src="{{ asset('storage/'.$product->images[0]->image) }}"
+                                src="{{ $product->images[0]->image }}"
                                 alt="{{ $product->name }}"
                                 class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
                             >

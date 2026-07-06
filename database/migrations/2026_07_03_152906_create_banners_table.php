@@ -24,14 +24,19 @@ return new class extends Migration
             $table->string('secondary_button_link')->nullable();
 
             $table->string('desktop_image')->nullable();
+            $table->string('desktop_image_id')->nullable();
+
             $table->string('mobile_image')->nullable();
+            $table->string('mobile_image_id')->nullable();
+
+            $table->string('background_image')->nullable();
+            $table->string('background_image_id')->nullable();
 
             $table->enum('background_type', [
                 'gradient',
                 'image',
                 'color'
             ])->default('gradient');
-
             $table->string('background_color')->nullable();
 
             $table->enum('position', [

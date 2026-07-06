@@ -8,6 +8,8 @@ use Livewire\Attributes\Computed;
 
 use App\Models\Category;
 
+use App\Services\CloudinaryService;
+
 new class extends Component
 {
     use WithPagination;
@@ -45,7 +47,13 @@ new class extends Component
     }
 
     public function delete($id){
-        Category::where('id', $id)->delete();
+        $category = Category::where('id', $id)->first();
+
+        app(CloudinaryService::class)
+            ->destroy($category->image_id);
+
+        $category->delete();
+
         $this->message = "Category Deleted Successfully";
     }
 };
@@ -106,7 +114,7 @@ new class extends Component
                 <flux:table.column>Name</flux:table.column>
                 <flux:table.column>Slug</flux:table.column>
                 <flux:table.column>Status</flux:table.column>
-                <flux:table.column>Image Url</flux:table.column>
+                <flux:table.column>Image</flux:table.column>
                 <flux:table.column>Remove</flux:table.column>
                 <flux:table.column>Update</flux:table.column>
             </flux:table.columns>
@@ -123,7 +131,7 @@ new class extends Component
                     @endif
 
                     @if($category['image'])
-                        <flux:table.cell class="whitespace-normal" variant="strong">{{$category['image']}}</flux:table.cell>
+                        <flux:table.cell variant="strong" class="whitespace-nowrap"><img class="h-12 w-12 rounded-lg border border-neutral-200 object-cover shrink-0 dark:border-neutral-700" src="{{ $category['image'] }}" alt="product-image"></flux:table.cell>
                     @else
                         <flux:table.cell variant="strong">NULL</flux:table.cell>
                     @endif
