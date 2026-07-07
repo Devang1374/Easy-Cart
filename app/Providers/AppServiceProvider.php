@@ -34,15 +34,22 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-            // Force Livewire to use your explicit Render domain for component updates
-            Livewire::setUpdateRoute(function ($handle) {
-                return Route::post('/livewire/update', $handle);
-            });
-        
-            // Force Livewire to find its upload files relative to your Render app root URL
-            Livewire::setScriptRoute(function ($handle) {
-                return Route::get('/livewire/livewire.js', $handle);
-            });
+        // Force Livewire to use your explicit Render domain for component updates
+        Livewire::setUpdateRoute(function ($handle) {
+            return Route::post('/livewire/update', $handle);
+        });
+    
+        // Force Livewire to find its upload files relative to your Render app root URL
+        Livewire::setScriptRoute(function ($handle) {
+            return Route::get('/livewire/livewire.js', $handle);
+        });
+
+        // FIX: Force Livewire to register the file upload endpoint properly
+        // Force Livewire to register the file upload endpoint with clean web middleware
+        Livewire::setUploadRoute(function ($handle) {
+            return Route::post('/livewire/upload-file', $handle)
+                ->middleware(['web']); // Ensure NO restrictive auth middleware is attached here
+        });
 
     }
 
