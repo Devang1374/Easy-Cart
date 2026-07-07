@@ -39,7 +39,7 @@ class product extends Model
 
     public function images()
     {
-        return $this->hasMany(ProductImage::class)
+        return $this->hasMany(productImage::class)
                 ->orderBy('sort_order');
     }
 
@@ -98,7 +98,7 @@ class product extends Model
             return false;
         }
 
-        return OrderItems::where('product_id', $this->id)
+        return orderItems::where('product_id', $this->id)
             ->whereHas('order', function ($query) use ($user) {
                 $query->where('user_id', $user->id)
                       ->where('status', 'Delivered');
