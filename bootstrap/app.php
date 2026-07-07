@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             guests: '/login',  // Where to send logged-out users
             users: 'user/homePage'     // Where to send logged-in users (Change this to your page!)
         );
+
+
+        $middleware->trustProxies(at: '*');
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

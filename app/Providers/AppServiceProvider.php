@@ -43,14 +43,6 @@ class AppServiceProvider extends ServiceProvider
         Livewire::setScriptRoute(function ($handle) {
             return Route::get('/livewire/livewire.js', $handle);
         });
-
-        // FIX: Force Livewire to register the file upload endpoint properly
-        // Force Livewire to register the file upload endpoint with clean web middleware
-        Livewire::setUploadRoute(function ($handle) {
-            return Route::post('/livewire/upload-file', $handle)
-                ->middleware(['web']); // Ensure NO restrictive auth middleware is attached here
-        });
-
     }
 
     /**
