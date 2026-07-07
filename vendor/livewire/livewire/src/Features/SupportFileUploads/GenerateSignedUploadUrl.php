@@ -10,12 +10,9 @@ class GenerateSignedUploadUrl
 {
     public function forLocal()
     {
-    
-        dd(URL::temporarySignedRoute(
-            'livewire.upload-file',
-            now()->addMinutes(FileUploadConfiguration::maxUploadTime())
-        ));
-
+        return URL::temporarySignedRoute(
+            'livewire.upload-file', now()->addMinutes(FileUploadConfiguration::maxUploadTime())
+        );
     }
 
     public function forS3($file, $visibility = 'private')
