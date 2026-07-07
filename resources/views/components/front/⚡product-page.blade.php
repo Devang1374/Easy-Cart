@@ -3,7 +3,7 @@
 use Livewire\Component;
 
 use App\Models\Category;
-use App\Models\product;
+use App\Models\Product;
 use App\Models\Wishlist;
 
 use Livewire\WithPagination;
@@ -39,7 +39,7 @@ new class extends Component
     #[Computed]
     public function loadProducts()
     {
-        $query = product::query()
+        $query = Product::query()
             ->with('images', 'category')
             ->where('is_active', true);
 
@@ -280,7 +280,7 @@ new class extends Component
                     <div class="overflow-hidden">
                         @if(isset($product->images[0]))
                             <img
-                                src="{{ $product->images[0]->image }}"
+                                src="{{ asset('storage/'.$product->images[0]->image) }}"
                                 alt="{{ $product->name }}"
                                 class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
                             >

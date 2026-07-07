@@ -5,9 +5,9 @@
     {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Laravel') : config('app.name', 'Laravel') }}
 </title>
 
-<link rel="icon" href="https://res.cloudinary.com/iowr4dh0/image/upload/v1783336799/easy-cart-logo_ygytxm.png" sizes="any">
-<link rel="icon" href="https://res.cloudinary.com/iowr4dh0/image/upload/v1783336799/easy-cart-logo_ygytxm.png" type="image/svg+ml">
-<link rel="apple-touch-icon" href="https://res.cloudinary.com/iowr4dh0/image/upload/v1783336799/easy-cart-logo_ygytxm.png">
+<link rel="icon" href="{{ Vite::asset('resources/images/easy-cart-logo.png') }}" sizes="any">
+<link rel="icon" href="{{ Vite::asset('resources/images/easy-cart-logo.png') }}" type="image/svg+ml">
+<link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/easy-cart-logo.png') }}">
 
 @fonts
 

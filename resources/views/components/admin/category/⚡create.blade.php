@@ -43,8 +43,9 @@ new class extends Component
         $path = "not set";
 
         if(!empty($this->image)){
+
             $upload = app(CloudinaryService::class)
-                ->upload($this->image, 'easycart/categories');
+                ->upload($this->image, 'easycart/products');
 
             $path = $upload['secure_url'];
             $publicId = $upload['public_id'];
@@ -71,17 +72,21 @@ new class extends Component
                 'title' => 'required|min:3',
             ]);
 
+            $imageId = Category::where('id', $this->edit_id)->value('image_id');
+
             if(!empty($this->image)){
-                $image_id = Category::where('id', $this->edit_id)->value('image_id');
                 app(CloudinaryService::class)
-                    ->destroy($image_id);
+                    ->destroy($imageId);
+
+                Category::where('id', $this->edit_id)->update([
+                    "image" => $path,
+                    "image_id" => $publicId,
+                ]);
             }
 
             Category::where('id', $this->edit_id)->update([
                 "name" => $this->title,
                 "slug" => $this->slug,
-                "image" => $path,
-                "image_id" => $publicId,
                 "is_active" => $this->active,
             ]);
 
@@ -130,7 +135,7 @@ new class extends Component
             
             @if(!empty($image_path) && empty($image))
                 <img
-                    src="{{ $image_path }}"
+                    src="{{$image_path}}"
                     class="w-32 h-32 object-cover rounded"
                 >
             @elseif(!empty($image))

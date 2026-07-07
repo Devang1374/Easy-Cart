@@ -213,7 +213,7 @@ new class extends Component
                                     <div class="h-28 w-28 shrink-0 overflow-hidden rounded-2xl">
                                         <a href="{{ route('user/productDetails', $item['slug']) }}">
                                             <img
-                                                src="{{ $item['image'] }}"
+                                                src="{{ asset('storage/'.$item['image']) }}"
                                                 class="h-full w-full object-cover"
                                             >
                                         </a>

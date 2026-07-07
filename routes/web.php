@@ -37,18 +37,9 @@ Route::get('user/productDetails/{slug}', [UserController::class, 'productDetails
 use App\Mail\notification;
 use Illuminate\Support\Facades\Mail;
 
-use App\Services\CloudinaryService;
+Route::get('/notification', function(){
+    Mail::to('yakshparmar123@email.com')
+        ->send(new notification());
 
-Route::get('/cloudinary-test', function () {
-
-$upload = app(CloudinaryService::class)
-    ->upload('test.jpg', 'easycart/products');
-
-$imageUrl = $upload['secure_url'];
-$publicId = $upload['public_id'];
-
+    return 'Sent';
 });
-
-Route::get('/test-auth', function () {
-    return auth()->check() ? 'logged in' : 'not logged in';
-})->middleware('web');

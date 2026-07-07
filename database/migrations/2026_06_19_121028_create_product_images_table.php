@@ -19,7 +19,6 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->string('image');
-            $table->string('image_id');
 
             $table->integer('sort_order')
                 ->default(0);

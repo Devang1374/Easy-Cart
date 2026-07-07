@@ -31,10 +31,6 @@ class Banner extends Model
         'starts_at',
         'expires_at',
         'background_image',
-
-        'mobile_image_id',
-        'desktop_image_id',
-        'background_image_id'
     ];
 
     protected $casts = [

@@ -4,18 +4,17 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 use App\Models\Review;
-use App\Models\product;
-use App\Models\orderItems;
+use App\Models\Product;
+use App\Models\OrderItems;
 
-use App\Services\CloudinaryService;
 
 new class extends Component
 {
     use WithFileUploads;
 
-    public product $product;
+    public Product $product;
 
-    public function mount(product $product)
+    public function mount(Product $product)
     {
         $this->product = $product;
     }
@@ -102,15 +101,9 @@ new class extends Component
         if (!empty($this->images)) {
 
             foreach ($this->images as $image) {
-            $upload = app(CloudinaryService::class)
-                ->upload($image, 'easycart/reviews');
-
-            $path = $upload['secure_url'];
-            $publicId = $upload['public_id'];
 
                 $review->images()->create([
-                    'image' => $path,
-                    'image_id' => $publicId,
+                    'image' => $image->store('reviews', 'public'),
                 ]);
 
             }
@@ -394,7 +387,7 @@ new class extends Component
                             @foreach($review->images as $image)
 
                                 <img
-                                    src="{{ $image->image }}"
+                                    src="{{ asset('storage/'.$image->image) }}"
                                     class="aspect-square w-full cursor-pointer rounded-2xl object-cover transition duration-300 hover:scale-105 hover:shadow-lg"
                                 >
 

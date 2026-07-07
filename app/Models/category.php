@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
-//commit
+
 class category extends Model
 {
     protected $fillable = [
@@ -13,7 +13,6 @@ class category extends Model
         'slug',
         'image',
         'image_id',
-        'image',
         'is_active',
     ];
 

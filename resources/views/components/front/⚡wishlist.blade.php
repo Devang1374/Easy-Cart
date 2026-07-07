@@ -86,7 +86,7 @@ new class extends Component
                         class="flex justify-center sm:block shrink-0"
                     >
                         <img
-                            src="{{ $product->images->first()->image }}"
+                            src="{{ asset('storage/'.$product->images->first()->image) }}"
                             class="h-40 w-40 rounded-2xl object-cover sm:h-28 sm:w-28"
                         >
                     </a>

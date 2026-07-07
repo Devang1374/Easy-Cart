@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('review_images', function (Blueprint $table) {
-            $table->id();
-            
-            $table->foreignId('review_id')->constrained()->cascadeOnDelete();
-            $table->string('image');
-            
-            $table->timestamps();
+        Schema::table('order_tables', function (Blueprint $table) {
+             $table->string('cashfree_order_id')
+                ->nullable();
+
+            $table->string('cf_payment_id')
+                ->nullable();
         });
     }
 
@@ -26,6 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('review_images');
+        Schema::table('order_tables', function (Blueprint $table) {
+            //
+        });
     }
 };

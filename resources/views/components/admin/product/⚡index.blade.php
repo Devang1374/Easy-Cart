@@ -10,8 +10,6 @@ use App\Models\product;
 
 use Illuminate\Support\Facades\Storage;
 
-use App\Services\CloudinaryService;
-
 new class extends Component
 {
     use WithPagination;
@@ -76,8 +74,8 @@ new class extends Component
         $images = $product->images()->get();
         
         foreach($images as $image){
-            app(CloudinaryService::class)
-                        ->destroy($image->image_id);
+            if(Storage::disk('public')->exists($image['image']))
+                Storage::disk('public')->delete($image['image']);
             
         }
 

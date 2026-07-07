@@ -88,15 +88,15 @@ new class extends Component
 
         if(!empty($this->image_file)){    
             foreach ($this->image_file as $index => $image) {
-                $upload = app(CloudinaryService::class)
+                 $upload = app(CloudinaryService::class)
                     ->upload($image, 'easycart/products');
 
                 $path = $upload['secure_url'];
-                $image_id = $upload['public_id'];
+                $publicId = $upload['public_id'];
 
                 $product->images()->create([
                     'image' => $path,
-                    'image_id' => $image_id,
+                    'image_id' => $publicId,
                     'sort_order' => $index,
                 ]);
             }
@@ -114,7 +114,7 @@ new class extends Component
 
                 foreach($images as $img){
                     app(CloudinaryService::class)
-                        ->destroy($img->image_id);
+                        ->destroy($img['image_id']);
                 }
 
                 $product->images()->where('product_id', $this->edit_id)->delete();
@@ -124,13 +124,13 @@ new class extends Component
                         ->upload($image, 'easycart/products');
 
                     $path = $upload['secure_url'];
-                    $image_id = $upload['public_id'];
-    
+                    $publicId = $upload['public_id'];
+
                     $product->images()->create([
                         'image' => $path,
-                        'image_id' => $image_id,
+                        'image_id' => $publicId,
                         'sort_order' => $index,
-                    ]);
+                    ]); 
                 }
             }
             

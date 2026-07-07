@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('review_images', function (Blueprint $table) {
-            $table->id();
-            
-            $table->foreignId('review_id')->constrained()->cascadeOnDelete();
-            $table->string('image');
-            
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_admin')->default(false);
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('review_images');
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
     }
 };

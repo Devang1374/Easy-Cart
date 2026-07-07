@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Component;
-use App\Models\product;
+use App\Models\Product;
 
 new class extends Component
 {
@@ -14,7 +14,7 @@ new class extends Component
 
     public function mount()
     {
-        $this->product = product::query()
+        $this->product = Product::query()
             ->with([
                 'images',
                 'category',
@@ -25,7 +25,7 @@ new class extends Component
 
         $this->selectedImage = $this->product->images->first()?->image;
 
-        $this->relatedProducts = product::query()
+        $this->relatedProducts = Product::query()
             ->with('images')
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
@@ -113,7 +113,7 @@ new class extends Component
         {{-- Gallery --}}
         <div class="overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800">
             <img
-                src="{{ $selectedImage }}"
+                src="{{ asset('storage/'.$selectedImage) }}"
                 class="h-[500px] w-full object-cover"
             >
 
@@ -127,7 +127,7 @@ new class extends Component
                     >
 
                         <img
-                            src="{{ $image->image }}"
+                            src="{{ asset('storage/'.$image->image) }}"
                             class="h-20 w-20 object-cover"
                         >
 
@@ -285,7 +285,6 @@ new class extends Component
 
     </section>
 
-    @if(!empty($relatedProducts[0]))
     <section class="mt-20">
 
         <div class="mb-8">
@@ -314,7 +313,7 @@ new class extends Component
                         @if(isset($related->images[0]))
 
                             <img
-                                src="{{ $related->images[0]->image }}"
+                                src="{{ asset('storage/'.$related->images[0]->image) }}"
                                 class="h-60 w-full object-cover transition duration-500 group-hover:scale-105"
                             >
 
@@ -341,5 +340,4 @@ new class extends Component
         </div>
 
     </section>
-    @endif
 </div>

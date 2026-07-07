@@ -48,9 +48,9 @@ new class extends Component
 
     public function delete($id){
         $category = Category::where('id', $id)->first();
-
+        
         app(CloudinaryService::class)
-            ->destroy($category->image_id);
+                    ->destroy($category->image_id);
 
         $category->delete();
 
@@ -130,11 +130,9 @@ new class extends Component
                     <flux:table.cell><flux:badge color="zinc" size="sm" inset="top bottom">Inactive</flux:badge></flux:table.cell>
                     @endif
 
-                    @if($category['image'])
-                        <flux:table.cell variant="strong" class="whitespace-nowrap"><img class="h-12 w-12 rounded-lg border border-neutral-200 object-cover shrink-0 dark:border-neutral-700" src="{{ $category['image'] }}" alt="product-image"></flux:table.cell>
-                    @else
-                        <flux:table.cell variant="strong">NULL</flux:table.cell>
-                    @endif
+                    <flux:table.cell class="flex flex-row gap-2 overflow-x-auto py-1">
+                        <img class="h-12 w-12 rounded-lg border border-neutral-200 object-cover shrink-0 dark:border-neutral-700" src="{{$category['image']}}" alt="product-image">
+                    </flux:table.cell>
                         <flux:table.cell variant="strong">
                             <flux:button wire:click="delete({{$category['id']}})" variant="danger" size="sm">Delete</flux:button>
                         </flux:table.cell>
