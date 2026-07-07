@@ -61,6 +61,15 @@ new class extends Component
 
         $this->selectedOrder->status = $status;
     }
+
+        public function delete($id){
+            if(!auth()->user()->is_admin){
+                return;
+            }
+        
+            orderTable::where('id', $id)->items()->delete();        
+            orderTable::where('id', $id)->delete();     
+        }
 };
 ?>
 
@@ -162,6 +171,7 @@ new class extends Component
                 <flux:table.column>Payment</flux:table.column>
                 <flux:table.column>Status</flux:table.column>
                 <flux:table.column>Date</flux:table.column>
+                <flux:table.column>Remove</flux:table.column>
                 <flux:table.column>Action</flux:table.column>
             </flux:table.columns>
 
@@ -240,7 +250,11 @@ new class extends Component
                         <flux:table.cell>
                             {{ $order->created_at->format('d M Y') }}
                         </flux:table.cell>
-
+                        
+                        <flux:table.cell variant="strong">
+                            <flux:button wire:click="delete({{$order['id']}})" variant="danger" size="sm">Delete</flux:button>
+                        </flux:table.cell>
+                        
                         <flux:table.cell>
                             <flux:button
                                 size="sm"

@@ -10,6 +10,8 @@ use App\Models\product;
 
 use Illuminate\Support\Facades\Storage;
 
+use App\Services\CloudinaryService;
+
 new class extends Component
 {
     use WithPagination;
