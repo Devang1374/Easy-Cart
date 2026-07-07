@@ -5,7 +5,7 @@ use Livewire\WithFileUploads;
 
 use App\Models\Review;
 use App\Models\product;
-use App\Models\OrderItems;
+use App\Models\orderItems;
 
 use App\Services\CloudinaryService;
 
