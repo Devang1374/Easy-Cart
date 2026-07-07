@@ -9,7 +9,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
 use Illuminate\Support\Facades\URL;
+
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Route;
 
 class AppServiceProvider extends ServiceProvider
 {
