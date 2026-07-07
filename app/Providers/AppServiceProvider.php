@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
 use Illuminate\Support\Facades\URL;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +31,17 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') === 'production') {
             URL::forceScheme('https');
         }
+
+            // Force Livewire to use your explicit Render domain for component updates
+            Livewire::setUpdateRoute(function ($handle) {
+                return Route::post('/livewire/update', $handle);
+            });
+        
+            // Force Livewire to find its upload files relative to your Render app root URL
+            Livewire::setScriptRoute(function ($handle) {
+                return Route::get('/livewire/livewire.js', $handle);
+            });
+
     }
 
     /**
