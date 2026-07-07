@@ -6,6 +6,7 @@ use Livewire\WithFileUploads;
 use Carbon\Carbon;
 use App\Models\Banner;
 
+use App\Services\CloudinaryService;
 
 new class extends Component
 {
@@ -136,6 +137,30 @@ new class extends Component
     {
         $this->validate();
 
+        if(!empty($this->desktop_image)){
+            $upload = app(CloudinaryService::class)
+                ->upload($this->desktop_image, 'easycart/banners');
+
+            $desktop_image_path = $upload['secure_url'];
+            $desktop_image_id = $upload['public_id'];
+        }
+        
+        if(!empty($this->mobile_image)){
+            $upload = app(CloudinaryService::class)
+                ->upload($this->mobile_image, 'easycart/banners');
+
+            $mobile_image_path = $upload['secure_url'];
+            $mobile_image_id = $upload['public_id'];
+        }
+        
+        if(!empty($this->background_image)){
+            $upload = app(CloudinaryService::class)
+                ->upload($this->background_image, 'easycart/banners');
+
+            $background_image_path = $upload['secure_url'];
+            $background_image_id = $upload['public_id'];
+        }
+
         if(empty($this->edit_id)){
             Banner::create([
     
@@ -148,13 +173,11 @@ new class extends Component
                 'secondary_button_text' => $this->secondary_button_text,
                 'secondary_button_link' => $this->secondary_button_link,
     
-                'desktop_image' => $this->desktop_image
-                    ? $this->desktop_image->store('banners','public')
-                    : null,
+                'desktop_image_id' => $desktop_image_id,
+                'desktop_image' => $desktop_image_path,
     
-                'mobile_image' => $this->mobile_image
-                    ? $this->mobile_image->store('banners','public')
-                    : null,
+                'mobile_image' => $mobile_image_path,
+                'mobile_image_id' => $mobile_image_id,
     
                 'background_type' => $this->background_type,
     
@@ -169,9 +192,8 @@ new class extends Component
                 'starts_at' => $this->starts_at,
                 'expires_at' => $this->expires_at,
 
-                'background_image' => $this->background_image
-                    ? $this->background_image->store('banners', 'public')
-                    : null,
+                'background_image' => $background_image_path,
+                'background_image_id' => $background_image_id,
     
             ]);
     
@@ -182,32 +204,40 @@ new class extends Component
             );
         }else{
             if(!empty($this->desktop_image)){
-                $oldPath = Banner::where('id', $this->edit_id)->value('desktop_image');
-                Storage::disk('public')->delete($oldPath);
+                $oldPath = Banner::where('id', $this->edit_id)->value('desktop_image_id');
+                
+                app(CloudinaryService::class)
+                    ->destroy($oldPath);
+
                 Banner::where('id', $this->edit_id)->update([
-                    'desktop_image' => $this->desktop_image->store('banners','public')
+                    'desktop_image' => $desktop_image_path,
+                    'desktop_image_id' => $desktop_image_id,
                 ]);
             }
 
             if(!empty($this->mobile_image)){
-                $oldPath = Banner::where('id', $this->edit_id)->value('mobile_image');
-                Storage::disk('public')->delete($oldPath);
+                $oldPath = Banner::where('id', $this->edit_id)->value('mobile_image_id');
+                
+                app(CloudinaryService::class)
+                    ->destroy($oldPath);
+                
                 Banner::where('id', $this->edit_id)->update([
-                    'mobile_image' => $this->mobile_image->store('banners','public')
+                    'mobile_image' => $mobile_image_path,
+                    'mobile_image_id' => $mobile_image_id,
                 ]);
             }
 
             if (!empty($this->background_image)) {
 
                 $oldPath = Banner::where('id', $this->edit_id)
-                    ->value('background_image');
+                    ->value('background_image_id');
 
-                if ($oldPath) {
-                    Storage::disk('public')->delete($oldPath);
-                }
+                app(CloudinaryService::class)
+                    ->destroy($oldPath);
 
                 Banner::where('id', $this->edit_id)->update([
-                    'background_image' => $this->background_image->store('banners', 'public')
+                    'background_image' => $background_image_path,
+                    'background_image_id' => $background_image_id
                 ]);
             }
 
@@ -333,7 +363,7 @@ new class extends Component
                         >
                     @elseif($tampDesktop_image && empty($desktop_image))
                         <img
-                            src="{{ asset('storage/'.$tampDesktop_image) }}"
+                            src="{{ $tampDesktop_image }}"
                             class="mt-4 h-48 w-full rounded-xl border object-cover"
                         >
                     @endif
@@ -353,7 +383,7 @@ new class extends Component
                         >
                     @elseif($tampMobile_image && empty($mobile_image))
                         <img
-                            src="{{ asset('storage/'.$tampMobile_image)}}"
+                            src="{{ $tampMobile_image }}"
                             class="mt-4 h-48 w-full rounded-xl border object-cover"
                         >
                     @endif
@@ -419,7 +449,7 @@ new class extends Component
                         @elseif($tampBackground_image)
 
                             <img
-                                src="{{ asset('storage/'.$tampBackground_image) }}"
+                                src="{{ $tampBackground_image }}"
                                 class="mt-4 h-52 w-full rounded-xl border object-cover"
                             >
 

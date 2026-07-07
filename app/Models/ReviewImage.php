@@ -13,6 +13,7 @@ class ReviewImage extends Model
     }
 
     protected $fillable = [
-        'image'
+        'image',
+        'image_id'
     ];
 }

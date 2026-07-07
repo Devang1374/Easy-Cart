@@ -19,6 +19,9 @@ class Banner extends Model
 
         'desktop_image',
         'mobile_image',
+        
+        'desktop_image_id',
+        'mobile_image_id',
 
         'background_type',
         'background_color',
@@ -31,6 +34,7 @@ class Banner extends Model
         'starts_at',
         'expires_at',
         'background_image',
+        'background_image_id',
     ];
 
     protected $casts = [

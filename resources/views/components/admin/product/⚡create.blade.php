@@ -88,7 +88,7 @@ new class extends Component
 
         if(!empty($this->image_file)){    
             foreach ($this->image_file as $index => $image) {
-                 $upload = app(CloudinaryService::class)
+                $upload = app(CloudinaryService::class)
                     ->upload($image, 'easycart/products');
 
                 $path = $upload['secure_url'];

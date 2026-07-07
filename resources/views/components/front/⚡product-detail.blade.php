@@ -1,7 +1,7 @@
 <?php
 
 use Livewire\Component;
-use App\Models\Product;
+use App\Models\product;
 
 new class extends Component
 {
@@ -14,7 +14,7 @@ new class extends Component
 
     public function mount()
     {
-        $this->product = Product::query()
+        $this->product = product::query()
             ->with([
                 'images',
                 'category',
@@ -25,7 +25,7 @@ new class extends Component
 
         $this->selectedImage = $this->product->images->first()?->image;
 
-        $this->relatedProducts = Product::query()
+        $this->relatedProducts = product::query()
             ->with('images')
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
@@ -113,7 +113,7 @@ new class extends Component
         {{-- Gallery --}}
         <div class="overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800">
             <img
-                src="{{ asset('storage/'.$selectedImage) }}"
+                src="{{ $selectedImage }}"
                 class="h-[500px] w-full object-cover"
             >
 
@@ -127,7 +127,7 @@ new class extends Component
                     >
 
                         <img
-                            src="{{ asset('storage/'.$image->image) }}"
+                            src="{{ $image->image }}"
                             class="h-20 w-20 object-cover"
                         >
 
@@ -313,7 +313,7 @@ new class extends Component
                         @if(isset($related->images[0]))
 
                             <img
-                                src="{{ asset('storage/'.$related->images[0]->image) }}"
+                                src="{{ $related->images[0]->image }}"
                                 class="h-60 w-full object-cover transition duration-500 group-hover:scale-105"
                             >
 

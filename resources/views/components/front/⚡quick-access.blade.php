@@ -19,7 +19,7 @@ new class extends Component
             return collect();
         }
 
-        return Product::with(['images', 'category'])
+        return product::with(['images', 'category'])
             ->where('name', 'like', '%' . $this->search . '%')
             ->take(6)
             ->get();
@@ -377,7 +377,7 @@ new class extends Component
                                 @if(isset($product->images[0]))
 
                                     <img
-                                        src="{{ asset('storage/' . $product->images[0]->image) }}"
+                                        src="{{ $product->images[0]->image }}"
                                         alt="{{ $product->name }}"
                                         class="h-full w-full object-cover"
                                     >

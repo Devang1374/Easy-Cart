@@ -4,7 +4,7 @@ use Livewire\Component;
 
 // all database models that is used
 use App\Models\Category;
-use App\Models\Product;
+use App\Models\product;
 use App\Models\Wishlist;
 use App\Models\Banner;
 
@@ -27,8 +27,8 @@ new class extends Component
     public function mount()
     {
         $this->categories = Category::query()->where('is_active', true)->latest()->take(8)->get();
-        $this->featuredProducts = Product::query()->with('images')->where('is_active', true)->where('featured', true)->latest()->take(8)->get();
-        $this->latestProducts = Product::query()->with('images')->where('is_active', true)->latest()->take(8)->get();
+        $this->featuredProducts = product::query()->with('images')->where('is_active', true)->where('featured', true)->latest()->take(8)->get();
+        $this->latestProducts = product::query()->with('images')->where('is_active', true)->latest()->take(8)->get();
 
         if (auth()->check()) {
             $this->wishlist = Wishlist::where('user_id', auth()->id())
@@ -286,7 +286,7 @@ new class extends Component
 
                                         @if($banner->desktop_image)
                                             <img
-                                                src="{{ asset('storage/'.$banner->desktop_image) }}"
+                                                src="{{ $banner->desktop_image }}"
                                                 alt="{{ $banner->title }}"
                                                 class="relative z-10 mx-auto max-h-[500px] max-w-full object-contain drop-shadow-[0_35px_60px_rgba(0,0,0,.45)] transition duration-500 hover:scale-105"
                                             >
@@ -339,7 +339,7 @@ new class extends Component
                         @if($category->image)
 
                             <img
-                                src="{{ asset('storage/' . $category->image) }}"
+                                src="{{ $category->image }}"
                                 alt="{{ $category->name }}"
                                 class="h-9 w-9 object-contain"
                             >
@@ -447,7 +447,7 @@ new class extends Component
                                 @if(isset($product->images[0]))
 
                                     <img
-                                        src="{{ asset('storage/'.$product->images[0]->image) }}"
+                                        src="{{ $product->images[0]->image }}"
                                         alt="{{ $product->name }}"
                                         class="h-72 w-full object-cover transition duration-700 group-hover:scale-110"
                                     >
@@ -586,7 +586,7 @@ new class extends Component
                     <div class="overflow-hidden">
                         @if(isset($product->images[0]))
                             <img
-                                src="{{ asset('storage/'.$product->images[0]->image) }}"
+                                src="{{ $product->images[0]->image }}"
                                 alt="{{ $product->name }}"
                                 class="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
                             >

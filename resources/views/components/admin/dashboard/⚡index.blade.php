@@ -2,7 +2,7 @@
 
 use Livewire\Component;
 
-use App\Models\Product;
+use App\Models\product;
 use App\Models\Category;
 use App\Models\orderTable;
 
@@ -19,22 +19,22 @@ new class extends Component
     #[on('stats-updated')]
     public function mount(){
         $this->stats = [
-            'products' => Product::count(),
+            'products' => product::count(),
             'categories' => Category::count(),
-            'active_products' => Product::where('is_active', true)->count(),
-            'stock' => Product::sum('stock'),
+            'active_products' => product::where('is_active', true)->count(),
+            'stock' => product::sum('stock'),
             'totalOrders' => orderTable::count(),
             'pendingOrders' => orderTable::where('status','pending')->count(),
             'processingOrders' => orderTable::where('status','processing')->count(),
             'deliveredOrders' => orderTable::where('status','delivered')->count(),
         ];
 
-        $this->recentProducts = Product::latest()
+        $this->recentProducts = product::latest()
             ->take(5)
             ->get()
             ->toArray();
 
-        $this->lowStockProducts = Product::where('stock', '<=', '2')
+        $this->lowStockProducts = product::where('stock', '<=', '2')
             ->where('is_active', '1')
             ->take(5)
             ->get()
@@ -43,7 +43,7 @@ new class extends Component
 
     public $selectedProduct;
     public function updateStock($id){
-        $this->selectedProduct = Product::with('images')->findOrFail($id);
+        $this->selectedProduct = product::with('images')->findOrFail($id);
         $this->showUpdate = true;
     }
 
@@ -53,7 +53,7 @@ new class extends Component
             'stock' => 'required'
         ]);
 
-        Product::where('id', $id)->update(['stock' => $this->stock]);
+        product::where('id', $id)->update(['stock' => $this->stock]);
         $this->mount();
         $this->showUpdate = false;
     }
@@ -359,7 +359,7 @@ new class extends Component
                     <div class="flex items-center gap-4">
                         @if(isset($selectedProduct->images[0]))
                             <img
-                                src="{{ asset('storage/'.$selectedProduct->images[0]->image) }}"
+                                src="{{ $selectedProduct->images[0]->image }}"
                                 class="h-16 w-16 shrink-0 rounded-lg object-cover"
                             >
                         @endif

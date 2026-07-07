@@ -438,7 +438,7 @@ new class extends Component
 
                         @if(isset($item->product->images[0]))
                             <img
-                                src="{{ asset('storage/'.$item->product->images[0]->image) }}"
+                                src="{{ $item->product->images[0]->image }}"
                                 alt="{{ $item->product_name }}"
                                 class="h-full w-full object-cover"
                             >

@@ -45,7 +45,7 @@ new class extends Component
         if(!empty($this->image)){
 
             $upload = app(CloudinaryService::class)
-                ->upload($this->image, 'easycart/products');
+                ->upload($this->image, 'easycart/categories');
 
             $path = $upload['secure_url'];
             $publicId = $upload['public_id'];

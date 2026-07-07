@@ -74,8 +74,8 @@ new class extends Component
         $images = $product->images()->get();
         
         foreach($images as $image){
-            if(Storage::disk('public')->exists($image['image']))
-                Storage::disk('public')->delete($image['image']);
+            app(CloudinaryService::class)
+                ->destroy($image['image_id']);
             
         }
 

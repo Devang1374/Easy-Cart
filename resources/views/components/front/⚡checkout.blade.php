@@ -248,57 +248,63 @@ new class extends Component
                     new OrderPlacedMail($order)
             );
 
-            $curl = curl_init();
+            // $curl = curl_init();
 
-            curl_setopt_array($curl, [
-                CURLOPT_URL => "https://sandbox.cashfree.com/pg/orders",
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "POST",
-                CURLOPT_POSTFIELDS => json_encode([
-                    'order_id' => $order->order_number,
-                    'order_currency' => 'INR',
-                    'order_amount' => (float) $order->total_amount,
+            // curl_setopt_array($curl, [
+            //     CURLOPT_URL => "https://sandbox.cashfree.com/pg/orders",
+            //     CURLOPT_RETURNTRANSFER => true,
+            //     CURLOPT_ENCODING => "",
+            //     CURLOPT_MAXREDIRS => 10,
+            //     CURLOPT_TIMEOUT => 30,
+            //     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            //     CURLOPT_CUSTOMREQUEST => "POST",
+            //     CURLOPT_POSTFIELDS => json_encode([
+            //         'order_id' => $order->order_number,
+            //         'order_currency' => 'INR',
+            //         'order_amount' => (float) $order->total_amount,
 
-                    'customer_details' => [
-                        'customer_id' => (string) auth()->id(),
-                        'customer_name' => $order->first_name . ' ' . $order->last_name,
-                        'customer_email' => $order->email,
-                        'customer_phone' => $order->phone,
-                    ],
+            //         'customer_details' => [
+            //             'customer_id' => (string) auth()->id(),
+            //             'customer_name' => $order->first_name . ' ' . $order->last_name,
+            //             'customer_email' => $order->email,
+            //             'customer_phone' => $order->phone,
+            //         ],
 
-                    'order_meta' => [
-                        'return_url' => route(
-                            'user/order-success',
-                            ['order_id' => $order->order_number]
-                        ),
-                    ],
-                ]),
-                CURLOPT_HTTPHEADER => [
-                    "Content-Type: application/json",
-                    "x-api-version: 2025-01-01",
-                    "x-client-id: " . env('CASHFREE_APP_ID'),
-                    "x-client-secret: " . env('CASHFREE_SECRET_KEY'),
-                ],
-            ]);
+            //         'order_meta' => [
+            //             'return_url' => route(
+            //                 'user/order-success',
+            //                 ['order_id' => $order->order_number]
+            //             ),
+            //         ],
+            //     ]),
+            //     CURLOPT_HTTPHEADER => [
+            //         "Content-Type: application/json",
+            //         "x-api-version: 2025-01-01",
+            //         "x-client-id: " . env('CASHFREE_APP_ID'),
+            //         "x-client-secret: " . env('CASHFREE_SECRET_KEY'),
+            //     ],
+            // ]);
 
-            $response = curl_exec($curl);
-            $error = curl_error($curl);
+            // $response = curl_exec($curl);
+            // $error = curl_error($curl);
 
-            curl_close($curl);
+            // curl_close($curl);
 
-            if ($error) {
-                dd($error);
-            }
+            // if ($error) {
+            //     dd($error);
+            // }
 
-            $result = json_decode($response, true);
-
+            // $result = json_decode($response, true);
             $order->update([
-                'cf_payment_id' => $result['payment_session_id']
+                'pyment' => "PAID",
+                'status' => "pendding"
             ]);     
+
+            return redirect()->route(
+                    'user/order-success',
+                    ['order_id' => $order->order_number]
+                );
+
 
             }else{
                 if($this->couponEdited){
@@ -309,57 +315,17 @@ new class extends Component
                         'total_amount' => $this->finalTotal,
                     ]);
 
-                    $curl = curl_init();
+                    // 
+                    
+                    $order->update([
+                        'pyment' => "PAID",
+                        'status' => "pendding"
+                    ]);     
 
-                    curl_setopt_array($curl, [
-                        CURLOPT_URL => "https://sandbox.cashfree.com/pg/orders",
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_ENCODING => "",
-                        CURLOPT_MAXREDIRS => 10,
-                        CURLOPT_TIMEOUT => 30,
-                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                        CURLOPT_CUSTOMREQUEST => "POST",
-                        CURLOPT_POSTFIELDS => json_encode([
-                            'order_id' => $order->order_number,
-                            'order_currency' => 'INR',
-                            'order_amount' => (float) $order->total_amount,
-
-                            'customer_details' => [
-                                'customer_id' => (string) auth()->id(),
-                                'customer_name' => $order->first_name . ' ' . $order->last_name,
-                                'customer_email' => $order->email,
-                                'customer_phone' => $order->phone,
-                            ],
-
-                            'order_meta' => [
-                                'return_url' => route(
-                                    'user/order-success',
-                                    ['order_id' => $order->order_number]
-                                ),
-                            ],
-                        ]),
-                        CURLOPT_HTTPHEADER => [
-                            "Content-Type: application/json",
-                            "x-api-version: 2025-01-01",
-                            "x-client-id: " . env('CASHFREE_APP_ID'),
-                            "x-client-secret: " . env('CASHFREE_SECRET_KEY'),
-                        ],
-                    ]);
-
-                    $response = curl_exec($curl);
-                    $error = curl_error($curl);
-
-                    curl_close($curl);
-
-                    if ($error) {
-                        dd($error);
-                    }
-
-                    $result = json_decode($response, true);
-
-                    orderTable::where('id', $order->id)->update([
-                        'cf_payment_id' => $result['payment_session_id']
-                    ]);
+                    return redirect()->route(
+                        'user/order-success',
+                        ['order_id' => $order->order_number]
+                    );
                 }
                 $order = orderTable::where('id', $this->order_id)->first();
                 $order->update([
