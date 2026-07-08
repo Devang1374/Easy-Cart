@@ -13,6 +13,7 @@ use Laravel\Fortify\Fortify;
 
 use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Contracts\LogoutResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -26,6 +27,14 @@ class FortifyServiceProvider extends ServiceProvider
             {
                 // Forces the backend to drop the user off at your target path
                 return redirect('/user/homePage');
+            }
+        });
+
+                $this->app->instance(RegisterResponse::class, new class implements RegisterResponse {
+            public function toResponse($request)
+            {
+                // Force the application to drop users here immediately after signing up
+                return redirect('/user/dashboard'); // 👈 Change this to your desired URL path
             }
         });
     }

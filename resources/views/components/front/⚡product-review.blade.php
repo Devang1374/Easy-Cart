@@ -103,7 +103,7 @@ new class extends Component
 
             foreach ($this->images as $image) {
                 $upload = app(CloudinaryService::class)
-                    ->upload($image, 'easycart/categories');
+                    ->upload($image, 'easycart/reviews');
 
                 $path = $upload['secure_url'];
                 $publicId = $upload['public_id'];
