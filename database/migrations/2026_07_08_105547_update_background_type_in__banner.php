@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('banners', function (Blueprint $table) {
-            $table->string('background_image')->nullable()->after('mobile_image');
+            // Add 'solid' and 'gradient-image' options
+            DB::statement("ALTER TABLE banners MODIFY COLUMN background_type ENUM('gradient', 'solid', 'image', 'gradient-image') NOT NULL DEFAULT 'gradient'");
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('banners', function (Blueprint $table) {
-            //
+             DB::statement("ALTER TABLE banners MODIFY COLUMN background_type ENUM('gradient', 'image', 'color') NOT NULL DEFAULT 'gradient'");
         });
     }
 };

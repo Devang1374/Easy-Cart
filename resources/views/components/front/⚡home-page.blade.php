@@ -179,14 +179,14 @@ new class extends Component
                             
                                     <div
                                         class="absolute inset-0 bg-cover bg-center"
-                                        style="background-image:url('{{ asset('storage/'.$banner->background_image) }}');"
+                                        style="background-image:url('{{ $banner->background_image }}');"
                                     ></div>
                             
                                 @elseif($banner->background_type === 'gradient-image')
                             
                                     <div
                                         class="absolute inset-0 bg-cover bg-center"
-                                        style="background-image:url('{{ asset('storage/'.$banner->background_image) }}');"
+                                        style="background-image:url('{{ $banner->background_image }}');"
                                     ></div>
                             
                                     <div

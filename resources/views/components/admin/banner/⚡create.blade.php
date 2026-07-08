@@ -359,11 +359,37 @@ new class extends Component
             <div class="grid gap-6 md:grid-cols-2">
 
                 <div>
-                    <flux:input
-                        wire:model="desktop_image"
-                        type="file"
-                        label="Desktop Image"
-                    />
+                    <div 
+                        x-data="{ isUploading: false, progress: 0 }"
+                        x-on:livewire-upload-start="isUploading = true; progress = 0"
+                        x-on:livewire-upload-finish="isUploading = false"
+                        x-on:livewire-upload-error="isUploading = false"
+                        x-on:livewire-upload-progress="progress = $event.detail.progress"
+                        class="space-y-3"
+                    >
+                        <flux:input
+                            wire:model="desktop_image"
+                            type="file"
+                            label="Desktop Image"
+                        />
+
+                        <!-- Reactive Progress Bar Wrapper -->
+                        <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
+                            <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                <span>{{ __('Uploading file...') }}</span>
+                                <span x-text="progress + '%'">0%</span>
+                            </div>
+
+                            <!-- Progress Bar Track -->
+                            <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                <!-- Progress Bar Fill (Matches Flux Accent Color) -->
+                                <div 
+                                    class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
+                                    :style="`width: ${progress}%`"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
 
                     @if($desktop_image)
                         <img
@@ -379,11 +405,37 @@ new class extends Component
                 </div>
 
                 <div>
-                    <flux:input
-                        wire:model="mobile_image"
-                        type="file"
-                        label="Mobile Image"
-                    />
+                    <div 
+                        x-data="{ isUploading: false, progress: 0 }"
+                        x-on:livewire-upload-start="isUploading = true; progress = 0"
+                        x-on:livewire-upload-finish="isUploading = false"
+                        x-on:livewire-upload-error="isUploading = false"
+                        x-on:livewire-upload-progress="progress = $event.detail.progress"
+                        class="space-y-3"
+                    >
+                        <flux:input
+                            wire:model="mobile_image"
+                            type="file"
+                            label="Mobile Image"
+                        />
+                    
+                        <!-- Reactive Progress Bar Wrapper -->
+                        <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
+                            <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                <span>{{ __('Uploading file...') }}</span>
+                                <span x-text="progress + '%'">0%</span>
+                            </div>
+
+                            <!-- Progress Bar Track -->
+                            <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                <!-- Progress Bar Fill (Matches Flux Accent Color) -->
+                                <div 
+                                    class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
+                                    :style="`width: ${progress}%`"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
 
                     @if($mobile_image)
                         <img
@@ -431,23 +483,49 @@ new class extends Component
                 </flux:select>
 
                 @if(in_array($background_type, ['gradient', 'solid', 'gradient-image']))
-                    <flux:input
-                        wire:model.live="background_color"
-                        type="color"
-                        label="Background Color"
-                    />
+                    
+                        <flux:input
+                            wire:model.live="background_color"
+                            type="color"
+                            label="Background Color"
+                        />
+
                 @endif
 
                 @if(in_array($background_type, ['image', 'gradient-image']))
 
                     <div class="md:col-span-2">
-
-                        <flux:input
-                            wire:model="background_image"
-                            type="file"
-                            label="Background Image"
-                        />
-
+                        <div 
+                            x-data="{ isUploading: false, progress: 0 }"
+                            x-on:livewire-upload-start="isUploading = true; progress = 0"
+                            x-on:livewire-upload-finish="isUploading = false"
+                            x-on:livewire-upload-error="isUploading = false"
+                            x-on:livewire-upload-progress="progress = $event.detail.progress"
+                            class="space-y-3"
+                        >
+                            <flux:input
+                                wire:model="background_image"
+                                type="file"
+                                label="Background Image"
+                            />
+                            
+                            <!-- Reactive Progress Bar Wrapper -->
+                            <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
+                                <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                    <span>{{ __('Uploading file...') }}</span>
+                                    <span x-text="progress + '%'">0%</span>
+                                </div>
+    
+                                <!-- Progress Bar Track -->
+                                <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                    <!-- Progress Bar Fill (Matches Flux Accent Color) -->
+                                    <div 
+                                        class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
+                                        :style="`width: ${progress}%`"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
                         @if($background_image)
 
                             <img
