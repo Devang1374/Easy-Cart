@@ -137,6 +137,15 @@ new class extends Component
     {
         $this->validate();
 
+        $desktop_image_path = null;
+        $desktop_image_id = null;
+
+        $mobile_image_path = null;
+        $mobile_image_id = null;
+
+        $background_image_path = null;
+        $background_image_id = null;
+
         if(!empty($this->desktop_image)){
             $upload = app(CloudinaryService::class)
                 ->upload($this->desktop_image, 'easycart/banners');
