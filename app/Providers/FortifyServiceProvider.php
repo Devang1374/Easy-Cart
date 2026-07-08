@@ -34,7 +34,7 @@ class FortifyServiceProvider extends ServiceProvider
             public function toResponse($request)
             {
                 // Force the application to drop users here immediately after signing up
-                return redirect('/user/dashboard'); // 👈 Change this to your desired URL path
+                return redirect('/user/homePage'); // 
             }
         });
     }
