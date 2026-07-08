@@ -72,6 +72,9 @@ RUN mkdir -p \
 RUN chown -R www-data:www-data storage bootstrap/cache \
  && chmod -R 775 storage bootstrap/cache
 
+ # Override PHP limits for Apache
+RUN echo "upload_max_filesize = 64M\npost_max_size = 64M\nmemory_limit = 512M" > /usr/local/etc/php/conf.d/uploads.ini
+
 EXPOSE 80
 
 CMD ["apache2-foreground"]

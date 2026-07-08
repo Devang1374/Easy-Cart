@@ -31,7 +31,7 @@ class UserController extends Controller
     }
 
     public function wishlist(){
-        return view('front.wishlist');
+        return view('front.Wishlist');
     }
 
     public function checkout(?string $order_id = null){
