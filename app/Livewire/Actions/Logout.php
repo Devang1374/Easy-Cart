@@ -19,6 +19,7 @@ class Logout
         Session::invalidate();
         Session::regenerateToken();
 
-        return redirect('/');
+        dd("adfasdf");
+        return redirect('/user/homePage', navigate: true);
     }
 }

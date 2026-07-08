@@ -67,8 +67,7 @@ new class extends Component
                 return;
             }
         
-            orderTable::where('id', $id)->items()->delete();        
-            orderTable::where('id', $id)->delete();     
+            orderTable::where('id', $id)->delete();        
         }
 };
 ?>
