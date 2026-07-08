@@ -8,8 +8,7 @@ use App\Models\Banner;
 
 use App\Services\CloudinaryService;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     public string $title = '';
@@ -48,10 +47,11 @@ new class extends Component
     public $expireTime;
 
     public $edit_id;
-    public function mount(){
-        if(!empty($this->edit_id)){
+    public function mount()
+    {
+        if (!empty($this->edit_id)) {
             $banner = Banner::where('id', $this->edit_id)->first();
-            
+
             $this->title = $banner->title;
             $this->subtitle = $banner->subtitle;
             $this->button_text = $banner->button_text;
@@ -68,14 +68,14 @@ new class extends Component
             $this->tampBackground_image = $banner->background_image;
 
             $dt = Carbon::parse($banner->starts_at);
-            
-            $this->startDate = $dt->format('Y-m-d'); 
+
+            $this->startDate = $dt->format('Y-m-d');
             $this->startTime = $dt->format('H:i');
             $this->start_at = Carbon::parse("{$this->startDate} {$this->startTime}")->toDateTimeString();
-            
+
             $dt = Carbon::parse($banner->expires_at);
 
-            $this->expireDate = $dt->format('Y-m-d'); 
+            $this->expireDate = $dt->format('Y-m-d');
             $this->expireTime = $dt->format('H:i');
             $this->expires_at = Carbon::parse("{$this->expireDate} {$this->expireTime}")->toDateTimeString();
         }
@@ -83,29 +83,22 @@ new class extends Component
 
     public function updated($property)
     {
-        if (in_array($property, ['startDate','startTime']) && $this->startDate) {
-
+        if (in_array($property, ['startDate', 'startTime']) && $this->startDate) {
             $time = $this->startTime ?: '00:00';
 
-            $this->starts_at = Carbon::parse(
-                "{$this->startDate} {$time}"
-            )->toDateTimeString();
+            $this->starts_at = Carbon::parse("{$this->startDate} {$time}")->toDateTimeString();
         }
 
-        if (in_array($property, ['expireDate','expireTime']) && $this->expireDate) {
-
+        if (in_array($property, ['expireDate', 'expireTime']) && $this->expireDate) {
             $time = $this->expireTime ?: '23:59';
 
-            $this->expires_at = Carbon::parse(
-                "{$this->expireDate} {$time}"
-            )->toDateTimeString();
+            $this->expires_at = Carbon::parse("{$this->expireDate} {$time}")->toDateTimeString();
         }
     }
 
     protected function rules()
     {
         return [
-
             'title' => 'required|max:255',
 
             'subtitle' => 'nullable',
@@ -146,77 +139,68 @@ new class extends Component
         $background_image_path = null;
         $background_image_id = null;
 
-        if(!empty($this->desktop_image)){
-            $upload = app(CloudinaryService::class)
-                ->upload($this->desktop_image, 'easycart/banners');
+        if (!empty($this->desktop_image)) {
+            $upload = app(CloudinaryService::class)->upload($this->desktop_image, 'easycart/banners');
 
             $desktop_image_path = $upload['secure_url'];
             $desktop_image_id = $upload['public_id'];
         }
-        
-        if(!empty($this->mobile_image)){
-            $upload = app(CloudinaryService::class)
-                ->upload($this->mobile_image, 'easycart/banners');
+
+        if (!empty($this->mobile_image)) {
+            $upload = app(CloudinaryService::class)->upload($this->mobile_image, 'easycart/banners');
 
             $mobile_image_path = $upload['secure_url'];
             $mobile_image_id = $upload['public_id'];
         }
-        
-        if(!empty($this->background_image)){
-            $upload = app(CloudinaryService::class)
-                ->upload($this->background_image, 'easycart/banners');
+
+        if (!empty($this->background_image)) {
+            $upload = app(CloudinaryService::class)->upload($this->background_image, 'easycart/banners');
 
             $background_image_path = $upload['secure_url'];
             $background_image_id = $upload['public_id'];
         }
 
-        if(empty($this->edit_id)){
+        if (empty($this->edit_id)) {
             Banner::create([
-    
                 'title' => $this->title,
                 'subtitle' => $this->subtitle,
-    
+
                 'button_text' => $this->button_text,
                 'button_link' => $this->button_link,
-    
+
                 'secondary_button_text' => $this->secondary_button_text,
                 'secondary_button_link' => $this->secondary_button_link,
-    
+
                 'desktop_image_id' => $desktop_image_id,
                 'desktop_image' => $desktop_image_path,
-    
+
                 'mobile_image' => $mobile_image_path,
                 'mobile_image_id' => $mobile_image_id,
-    
+
                 'background_type' => $this->background_type,
-    
+
                 'background_color' => $this->background_color,
-    
+
                 'position' => $this->position,
-    
+
                 'sort_order' => $this->sort_order,
-    
+
                 'is_active' => $this->is_active,
-    
+
                 'starts_at' => $this->starts_at,
                 'expires_at' => $this->expires_at,
 
                 'background_image' => $background_image_path,
                 'background_image_id' => $background_image_id,
-    
             ]);
-    
+
             $this->dispatch('banner-updated');
-            $this->dispatch(
-                'send-message',
-                'Banner created successfully.'
-            );
-        }else{
-            if(!empty($this->desktop_image)){
+            $this->dispatch('send-message', 'Banner created successfully.');
+        } else {
+            if (!empty($this->desktop_image)) {
                 $oldPath = Banner::where('id', $this->edit_id)->value('desktop_image_id');
-                
-                app(CloudinaryService::class)
-                    ->destroy($oldPath);
+
+                app(CloudinaryService::class)->destroy($oldPath);
 
                 Banner::where('id', $this->edit_id)->update([
                     'desktop_image' => $desktop_image_path,
@@ -224,12 +208,11 @@ new class extends Component
                 ]);
             }
 
-            if(!empty($this->mobile_image)){
+            if (!empty($this->mobile_image)) {
                 $oldPath = Banner::where('id', $this->edit_id)->value('mobile_image_id');
-                
-                app(CloudinaryService::class)
-                    ->destroy($oldPath);
-                
+
+                app(CloudinaryService::class)->destroy($oldPath);
+
                 Banner::where('id', $this->edit_id)->update([
                     'mobile_image' => $mobile_image_path,
                     'mobile_image_id' => $mobile_image_id,
@@ -237,43 +220,38 @@ new class extends Component
             }
 
             if (!empty($this->background_image)) {
+                $oldPath = Banner::where('id', $this->edit_id)->value('background_image_id');
 
-                $oldPath = Banner::where('id', $this->edit_id)
-                    ->value('background_image_id');
-
-                app(CloudinaryService::class)
-                    ->destroy($oldPath);
+                app(CloudinaryService::class)->destroy($oldPath);
 
                 Banner::where('id', $this->edit_id)->update([
                     'background_image' => $background_image_path,
-                    'background_image_id' => $background_image_id
+                    'background_image_id' => $background_image_id,
                 ]);
             }
 
             Banner::where('id', $this->edit_id)->update([
-    
                 'title' => $this->title,
                 'subtitle' => $this->subtitle,
-    
+
                 'button_text' => $this->button_text,
                 'button_link' => $this->button_link,
-    
+
                 'secondary_button_text' => $this->secondary_button_text,
                 'secondary_button_link' => $this->secondary_button_link,
-                
+
                 'background_type' => $this->background_type,
-    
+
                 'background_color' => $this->background_color,
-    
+
                 'position' => $this->position,
-    
+
                 'sort_order' => $this->sort_order,
-    
+
                 'is_active' => $this->is_active,
-    
+
                 'starts_at' => $this->starts_at,
                 'expires_at' => $this->expires_at,
-    
             ]);
         }
 
@@ -281,7 +259,8 @@ new class extends Component
         $this->dispatch('banner-update');
     }
 
-    public function cancel(){
+    public function cancel()
+    {
         $this->reset();
         $this->dispatch('banner-update');
     }
@@ -300,17 +279,9 @@ new class extends Component
 
             <div class="space-y-5">
 
-                <flux:input
-                    wire:model="title"
-                    label="Banner Title"
-                    placeholder="Mega Summer Sale"
-                />
+                <flux:input wire:model="title" label="Banner Title" placeholder="Mega Summer Sale" />
 
-                <flux:textarea
-                    wire:model="subtitle"
-                    label="Subtitle"
-                    placeholder="Up to 70% OFF on selected products."
-                />
+                <flux:textarea wire:model="subtitle" label="Subtitle" placeholder="Up to 70% OFF on selected products." />
 
             </div>
         </div>
@@ -323,29 +294,13 @@ new class extends Component
 
             <div class="grid gap-5 md:grid-cols-2">
 
-                <flux:input
-                    wire:model="button_text"
-                    label="Primary Button Text"
-                    placeholder="Shop Now"
-                />
+                <flux:input wire:model="button_text" label="Primary Button Text" placeholder="Shop Now" />
 
-                <flux:input
-                    wire:model="button_link"
-                    label="Primary Button Link"
-                    placeholder="/user/product"
-                />
+                <flux:input wire:model="button_link" label="Primary Button Link" placeholder="/user/product" />
 
-                <flux:input
-                    wire:model="secondary_button_text"
-                    label="Secondary Button Text"
-                    placeholder="Learn More"
-                />
+                <flux:input wire:model="secondary_button_text" label="Secondary Button Text" placeholder="Learn More" />
 
-                <flux:input
-                    wire:model="secondary_button_link"
-                    label="Secondary Button Link"
-                    placeholder="/about"
-                />
+                <flux:input wire:model="secondary_button_link" label="Secondary Button Link" placeholder="/about" />
 
             </div>
         </div>
@@ -359,23 +314,16 @@ new class extends Component
             <div class="grid gap-6 md:grid-cols-2">
 
                 <div>
-                    <div 
-                        x-data="{ isUploading: false, progress: 0 }"
-                        x-on:livewire-upload-start="isUploading = true; progress = 0"
+                    <div x-data="{ isUploading: false, progress: 0 }" x-on:livewire-upload-start="isUploading = true; progress = 0"
                         x-on:livewire-upload-finish="isUploading = false"
                         x-on:livewire-upload-error="isUploading = false"
-                        x-on:livewire-upload-progress="progress = $event.detail.progress"
-                        class="space-y-3"
-                    >
-                        <flux:input
-                            wire:model="desktop_image"
-                            type="file"
-                            label="Desktop Image"
-                        />
+                        x-on:livewire-upload-progress="progress = $event.detail.progress" class="space-y-3">
+                        <flux:input wire:model="desktop_image" type="file" label="Desktop Image" />
 
                         <!-- Reactive Progress Bar Wrapper -->
                         <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
-                            <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                            <div
+                                class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                 <span>{{ __('Uploading file...') }}</span>
                                 <span x-text="progress + '%'">0%</span>
                             </div>
@@ -383,45 +331,31 @@ new class extends Component
                             <!-- Progress Bar Track -->
                             <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                                 <!-- Progress Bar Fill (Matches Flux Accent Color) -->
-                                <div 
-                                    class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
-                                    :style="`width: ${progress}%`"
-                                ></div>
+                                <div class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out"
+                                    :style="`width: ${progress}%`"></div>
                             </div>
                         </div>
                     </div>
 
-                    @if($desktop_image)
-                        <img
-                            src="{{ $desktop_image->temporaryUrl() }}"
-                            class="mt-4 h-48 w-full rounded-xl border object-cover"
-                        >
+                    @if ($desktop_image)
+                        <img src="{{ $desktop_image->temporaryUrl() }}"
+                            class="mt-4 h-48 w-full rounded-xl border object-cover">
                     @elseif($tampDesktop_image && empty($desktop_image))
-                        <img
-                            src="{{ $tampDesktop_image }}"
-                            class="mt-4 h-48 w-full rounded-xl border object-cover"
-                        >
+                        <img src="{{ $tampDesktop_image }}" class="mt-4 h-48 w-full rounded-xl border object-cover">
                     @endif
                 </div>
 
                 <div>
-                    <div 
-                        x-data="{ isUploading: false, progress: 0 }"
-                        x-on:livewire-upload-start="isUploading = true; progress = 0"
+                    <div x-data="{ isUploading: false, progress: 0 }" x-on:livewire-upload-start="isUploading = true; progress = 0"
                         x-on:livewire-upload-finish="isUploading = false"
                         x-on:livewire-upload-error="isUploading = false"
-                        x-on:livewire-upload-progress="progress = $event.detail.progress"
-                        class="space-y-3"
-                    >
-                        <flux:input
-                            wire:model="mobile_image"
-                            type="file"
-                            label="Mobile Image"
-                        />
-                    
+                        x-on:livewire-upload-progress="progress = $event.detail.progress" class="space-y-3">
+                        <flux:input wire:model="mobile_image" type="file" label="Mobile Image" />
+
                         <!-- Reactive Progress Bar Wrapper -->
                         <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
-                            <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                            <div
+                                class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                 <span>{{ __('Uploading file...') }}</span>
                                 <span x-text="progress + '%'">0%</span>
                             </div>
@@ -429,24 +363,17 @@ new class extends Component
                             <!-- Progress Bar Track -->
                             <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                                 <!-- Progress Bar Fill (Matches Flux Accent Color) -->
-                                <div 
-                                    class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
-                                    :style="`width: ${progress}%`"
-                                ></div>
+                                <div class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out"
+                                    :style="`width: ${progress}%`"></div>
                             </div>
                         </div>
                     </div>
 
-                    @if($mobile_image)
-                        <img
-                            src="{{ $mobile_image->temporaryUrl() }}"
-                            class="mt-4 h-48 w-full rounded-xl border object-cover"
-                        >
+                    @if ($mobile_image)
+                        <img src="{{ $mobile_image->temporaryUrl() }}"
+                            class="mt-4 h-48 w-full rounded-xl border object-cover">
                     @elseif($tampMobile_image && empty($mobile_image))
-                        <img
-                            src="{{ $tampMobile_image }}"
-                            class="mt-4 h-48 w-full rounded-xl border object-cover"
-                        >
+                        <img src="{{ $tampMobile_image }}" class="mt-4 h-48 w-full rounded-xl border object-cover">
                     @endif
                 </div>
 
@@ -461,10 +388,7 @@ new class extends Component
 
             <div class="grid gap-5 md:grid-cols-2">
 
-                <flux:select
-                    wire:model.live="background_type"
-                    label="Background Type"
-                >
+                <flux:select wire:model.live="background_type" label="Background Type">
                     <flux:select.option value="gradient">
                         Gradient
                     </flux:select.option>
@@ -482,35 +406,22 @@ new class extends Component
                     </flux:select.option>
                 </flux:select>
 
-                @if(in_array($background_type, ['gradient', 'solid', 'gradient-image']))
-                    
-                        <flux:input
-                            wire:model.live="background_color"
-                            type="color"
-                            label="Background Color"
-                        />
-
+                @if (in_array($background_type, ['gradient', 'solid', 'gradient-image']))
+                    <flux:input wire:model.live="background_color" type="color" label="Background Color" />
                 @endif
 
-                @if(in_array($background_type, ['image', 'gradient-image']))
+                @if (in_array($background_type, ['image', 'gradient-image']))
 
                     <div class="md:col-span-2">
-                        <div 
-                            x-data="{ isUploading: false, progress: 0 }"
-                            x-on:livewire-upload-start="isUploading = true; progress = 0"
+                        <div x-data="{ isUploading: false, progress: 0 }" x-on:livewire-upload-start="isUploading = true; progress = 0"
                             x-on:livewire-upload-finish="isUploading = false"
                             x-on:livewire-upload-error="isUploading = false"
-                            x-on:livewire-upload-progress="progress = $event.detail.progress"
-                            class="space-y-3"
-                        >
-                            <flux:input
-                                wire:model="background_image"
-                                type="file"
-                                label="Background Image"
-                            />
+                            x-on:livewire-upload-progress="progress = $event.detail.progress" class="space-y-3">
+                            <flux:input wire:model="background_image" type="file" label="Background Image" />
                             <!-- Reactive Progress Bar Wrapper -->
                             <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
-                                <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                <div
+                                    class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                     <span>{{ __('Uploading file...') }}</span>
                                     <span x-text="progress + '%'">0%</span>
                                 </div>
@@ -518,28 +429,18 @@ new class extends Component
                                 <!-- Progress Bar Track -->
                                 <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                                     <!-- Progress Bar Fill (Matches Flux Accent Color) -->
-                                    <div 
-                                        class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out" 
-                                        :style="`width: ${progress}%`"
-                                    ></div>
+                                    <div class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out"
+                                        :style="`width: ${progress}%`"></div>
                                 </div>
                             </div>
                         </div>
-                        
-                        @if($background_image)
 
-                            <img
-                                src="{{ $background_image->temporaryUrl() }}"
-                                class="mt-4 h-52 w-full rounded-xl border object-cover"
-                            >
-
+                        @if ($background_image)
+                            <img src="{{ $background_image->temporaryUrl() }}"
+                                class="mt-4 h-52 w-full rounded-xl border object-cover">
                         @elseif($tampBackground_image)
-
-                            <img
-                                src="{{ $tampBackground_image }}"
-                                class="mt-4 h-52 w-full rounded-xl border object-cover"
-                            >
-
+                            <img src="{{ $tampBackground_image }}"
+                                class="mt-4 h-52 w-full rounded-xl border object-cover">
                         @endif
 
                     </div>
@@ -557,10 +458,7 @@ new class extends Component
 
             <div class="grid gap-5 md:grid-cols-2">
 
-                <flux:select
-                    wire:model="position"
-                    label="Banner Position"
-                >
+                <flux:select wire:model="position" label="Banner Position">
                     <flux:select.option value="hero">
                         Hero Banner
                     </flux:select.option>
@@ -578,11 +476,7 @@ new class extends Component
                     </flux:select.option>
                 </flux:select>
 
-                <flux:input
-                    wire:model="sort_order"
-                    type="number"
-                    label="Display Order"
-                />
+                <flux:input wire:model="sort_order" type="number" label="Display Order" />
 
             </div>
         </div>
@@ -603,15 +497,9 @@ new class extends Component
 
                     <div class="grid grid-cols-2 gap-3">
 
-                        <flux:input
-                            wire:model.live="startDate"
-                            type="date"
-                        />
+                        <flux:input wire:model.live="startDate" type="date" />
 
-                        <flux:input
-                            wire:model.live="startTime"
-                            type="time"
-                        />
+                        <flux:input wire:model.live="startTime" type="time" />
 
                     </div>
 
@@ -625,15 +513,9 @@ new class extends Component
 
                     <div class="grid grid-cols-2 gap-3">
 
-                        <flux:input
-                            wire:model.live="expireDate"
-                            type="date"
-                        />
+                        <flux:input wire:model.live="expireDate" type="date" />
 
-                        <flux:input
-                            wire:model.live="expireTime"
-                            type="time"
-                        />
+                        <flux:input wire:model.live="expireTime" type="time" />
 
                     </div>
 
@@ -645,34 +527,22 @@ new class extends Component
         {{-- ================= Status ================= --}}
         <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-700">
 
-            <flux:checkbox
-                wire:model="is_active"
-                label="Banner Active"
-            />
+            <flux:checkbox wire:model="is_active" label="Banner Active" />
 
         </div>
 
         {{-- ================= Buttons ================= --}}
         <div class="space-y-3">
 
-            <flux:button
-                variant="primary"
-                type="submit"
-                class="w-full"
-            >
-                @if(empty($edit_id))
+            <flux:button variant="primary" type="submit" class="w-full">
+                @if (empty($edit_id))
                     Create Banner
                 @else
                     Update Banner
                 @endif
             </flux:button>
 
-            <flux:button
-                wire:click="cancel"
-                variant="danger"
-                type="button"
-                class="w-full"
-            >
+            <flux:button wire:click="cancel" variant="danger" type="button" class="w-full">
                 Cancel
             </flux:button>
 
