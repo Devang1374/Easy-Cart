@@ -508,14 +508,13 @@ new class extends Component
                                 type="file"
                                 label="Background Image"
                             />
-                            
                             <!-- Reactive Progress Bar Wrapper -->
                             <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
                                 <div class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
                                     <span>{{ __('Uploading file...') }}</span>
                                     <span x-text="progress + '%'">0%</span>
                                 </div>
-    
+
                                 <!-- Progress Bar Track -->
                                 <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                                     <!-- Progress Bar Fill (Matches Flux Accent Color) -->
@@ -526,6 +525,7 @@ new class extends Component
                                 </div>
                             </div>
                         </div>
+                        
                         @if($background_image)
 
                             <img
