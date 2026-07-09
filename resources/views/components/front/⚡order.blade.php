@@ -4,19 +4,15 @@ use Livewire\Component;
 
 use App\Models\orderTable;
 
-new class extends Component
-{
-
+new class extends Component {
     public $orders;
-    public function mount(){
-        $this->orders = orderTable::where(
-                'user_id',
-                auth()->id()
-            )
+    public function mount()
+    {
+        $this->orders = orderTable::where('user_id', auth()->id())
             ->latest()
             ->get();
     }
-}
+};
 ?>
 
 <div class="mx-auto max-w-7xl px-6 py-10">
@@ -57,36 +53,41 @@ new class extends Component
                     {{-- Order Status --}}
                     <div>
 
-                        @if($order->status === 'pending')
-
-                            <span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                        @if ($order->status === 'pending')
+                            <span
+                                class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                                 Pending
                             </span>
-
                         @elseif($order->status === 'processing')
-
-                            <span class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                            <span
+                                class="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                                 Processing
                             </span>
-
                         @elseif($order->status === 'shipped')
-
-                            <span class="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                            <span
+                                class="rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                                 Shipped
                             </span>
-
                         @elseif($order->status === 'delivered')
-
-                            <span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <span
+                                class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                 Delivered
                             </span>
-
+                        @elseif($order->status === 'Returned')
+                            <span
+                                class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                Returned
+                            </span>
+                        @elseif($order->status === 'Received')
+                            <span
+                                class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                Return is Under Processing
+                            </span>
                         @else
-
-                            <span class="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                            <span
+                                class="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                 Cancelled
                             </span>
-
                         @endif
 
                     </div>
@@ -94,18 +95,21 @@ new class extends Component
                     {{-- Payment Status --}}
                     <div>
 
-                        @if($order->pyment === 'PAID')
-
-                            <span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        @if ($order->pyment === 'PAID')
+                            <span
+                                class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                 Paid
                             </span>
-
+                        @elseif ($order->pyment === 'Refunded')
+                            <span
+                                class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                Refunded
+                            </span>
                         @else
-
-                            <span class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            <span
+                                class="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                                 Payment Pending
                             </span>
-
                         @endif
 
                     </div>
@@ -119,14 +123,12 @@ new class extends Component
                             </flux:button>
                         </a>
 
-                        @if($order->pyment !== 'PAID' && $order->status != "cancelled")
-
+                        @if ($order->pyment !== 'PAID' && $order->status != 'cancelled')
                             <a href="{{ route('user/checkout', $order->id) }}">
                                 <flux:button variant="primary">
                                     Pay Now
                                 </flux:button>
                             </a>
-
                         @endif
 
                     </div>
@@ -143,7 +145,6 @@ new class extends Component
                 </h2>
 
             </div>
-
         @endforelse
 
     </div>

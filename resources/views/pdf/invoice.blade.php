@@ -238,6 +238,12 @@
                         PAID
                     </span>
 
+                @elseif($order->pyment === 'Refunded')
+
+                    <span class="badge-paid">
+                        Refunded
+                    </span>
+
                 @else
 
                     <span class="badge-pending">

@@ -79,6 +79,7 @@ new class extends Component {
         $order = orderTable::findOrFail($id);
 
         $order->update([
+            'status' => 'Received',
             'return_status' => 'received',
             'return_admin_note' => $this->adminNote,
         ]);
@@ -90,9 +91,26 @@ new class extends Component {
 
     public function refunded($id)
     {
-        $order = orderTable::findOrFail($id);
+        $order = orderTable::with('items.product')->findOrFail($id);
 
+        // Prevent duplicate refund
+        if ($order->return_status === 'refunded') {
+            Flux::toast(variant: 'warning', heading: 'Already Refunded', text: 'This return has already been processed.');
+
+            return;
+        }
+
+        // Restore stock
+        foreach ($order->items as $item) {
+            if ($item->product) {
+                $item->product->increment('stock', $item->quantity);
+            }
+        }
+
+        // Update order
         $order->update([
+            'status' => 'Returned',
+            'pyment' => 'Refunded',
             'return_status' => 'refunded',
             'return_admin_note' => $this->adminNote,
             'return_completed_at' => now(),
@@ -100,9 +118,7 @@ new class extends Component {
 
         $this->selectedOrder = $order->fresh();
 
-        Flux::toast(variant: 'success', heading: 'Received', text: 'Return Request Received');
-
-        // We'll also restore stock and process the refund here later.
+        Flux::toast(variant: 'success', heading: 'Refund Completed', text: 'Stock restored and return completed successfully.');
     }
 
     public string $adminNote = '';

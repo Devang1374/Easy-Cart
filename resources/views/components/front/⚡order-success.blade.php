@@ -184,6 +184,10 @@ new class extends Component {
                         <span class="text-green-600 dark:text-green-400">
                             Paid
                         </span>
+                    @elseif ($order->pyment === 'Refunded')
+                        <span class="text-green-600 dark:text-green-400">
+                            Refunded
+                        </span>
                     @else
                         <span class="text-yellow-600 dark:text-yellow-400">
                             Pending
@@ -200,6 +204,10 @@ new class extends Component {
                         <span class="text-green-600 dark:text-green-400">
                             Delivered
                         </span>
+                    @elseif ($order->status === 'Returned')
+                        <span class="text-green-600 dark:text-green-400">
+                            Returned
+                        </span>
                     @else
                         <span class="text-yellow-600 dark:text-yellow-400">
                             {{ $order->status }}
@@ -212,14 +220,16 @@ new class extends Component {
 
         <div class="mt-8 flex flex-wrap justify-center gap-3">
 
-            @if ($order->pyment !== 'PAID' && $order->status != 'cancelled')
-                <flux:button wire:click="payNow">
-                    Pay Now
-                </flux:button>
+            @if ($order->pyment !== 'Refunded' || $order->status != 'Returned')
+                @if ($order->pyment !== 'PAID' && $order->status != 'cancelled')
+                    <flux:button wire:click="payNow">
+                        Pay Now
+                    </flux:button>
 
-                <flux:button variant="danger" wire:click="cancel">
-                    Cancel
-                </flux:button>
+                    <flux:button variant="danger" wire:click="cancel">
+                        Cancel
+                    </flux:button>
+                @endif
             @endif
 
             <a href="{{ route('user/product') }}">
