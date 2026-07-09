@@ -137,13 +137,13 @@ new class extends Component {
 
         <div class="flex items-center gap-4">
             <!-- Start Date Input -->
-            <flux:input type="date" wire:model.live="startDate" label="From Date" />
+            <flux:input type="date" wire:model.live="startDate" label="From Date" max="{{ now()->format('Y-m-d') }}" />
 
             <!-- Decorative Spacer/Arrow -->
             <span class="text-gray-400 mt-5">to</span>
 
             <!-- End Date Input -->
-            <flux:input type="date" wire:model.live="endDate" label="To Date" />
+            <flux:input type="date" wire:model.live="endDate" label="To Date" max="{{ now()->format('Y-m-d') }}" />
         </div>
 
         <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0">
