@@ -1,13 +1,30 @@
 <?php
 
 use Livewire\Component;
+
 use App\Models\orderTable;
+use Livewire\WithPagination;
 
 new class extends Component {
+    use WithPagination;
+
+    public $status = 'all';
     public function getReturnOrdersProperty()
     {
-        return orderTable::with(['user', 'items.product.images'])
+        return OrderTable::with(['user', 'items.product.images'])
             ->where('return_requested', true)
+            ->when($this->search, function ($query) {
+                $query->where(function ($subQuery) {
+                    // Search order table
+                    $subQuery
+                        ->where('order_number', 'like', '%' . $this->search . '%')
+                        // Search related user table
+                        ->orWhereHas('user', function ($userQuery) {
+                            $userQuery->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%');
+                        });
+                });
+            })
+            ->when($this->status !== 'all', fn($query) => $query->where('return_status', $this->status))
             ->latest('return_requested_at')
             ->paginate(10);
     }
@@ -80,10 +97,49 @@ new class extends Component {
         $this->adminNote = $this->selectedOrder->return_admin_note ?? '';
         $this->showViewModal = true;
     }
+
+    public string $search = '';
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
 };
 ?>
 
 <div class="space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="w-full sm:w-72">
+            <flux:input wire:model.live="search" name="Search" type="text" placeholder="Search Categories..." />
+        </div>
+
+        <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0">
+
+            <flux:button wire:click="$set('status', 'all')" variant="{{ $status === 'all' ? 'primary' : 'ghost' }}">
+                All
+            </flux:button>
+
+            <flux:button wire:click="$set('status', 'requested')"
+                variant="{{ $status === 'requested' ? 'primary' : 'ghost' }}">
+                Requested
+            </flux:button>
+
+            <flux:button wire:click="$set('status', 'rejected')"
+                variant="{{ $status === 'rejected' ? 'primary' : 'ghost' }}">
+                Rejected
+            </flux:button>
+
+            <flux:button wire:click="$set('status', 'received')"
+                variant="{{ $status === 'received' ? 'primary' : 'ghost' }}">
+                Received
+            </flux:button>
+
+            <flux:button wire:click="$set('status', 'refunded')"
+                variant="{{ $status === 'refunded' ? 'primary' : 'ghost' }}">
+                Refunded
+            </flux:button>
+
+        </div>
+    </div>
 
     <flux:table scrollable container:class="w-full" :paginate="$this->returnOrders">
 
@@ -354,7 +410,7 @@ new class extends Component {
                             <div class="flex items-center gap-4 rounded-2xl border p-4">
 
                                 @if (isset($item->product->images[0]))
-                                    <img src="{{ $item->product->images[0]->image }}"
+                                    <img src="{{ asset('storage/' . $item->product->images[0]->image) }}"
                                         class="h-20 w-20 rounded-xl object-cover">
                                 @endif
 
