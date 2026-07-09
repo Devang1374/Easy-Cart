@@ -444,7 +444,7 @@ new class extends Component {
                             <div class="flex items-center gap-4 rounded-2xl border p-4">
 
                                 @if (isset($item->product->images[0]))
-                                    <img src="{{ asset('storage/' . $item->product->images[0]->image) }}"
+                                    <img src="{{ $item->product->images[0]->image }}"
                                         class="h-20 w-20 rounded-xl object-cover">
                                 @endif
 
