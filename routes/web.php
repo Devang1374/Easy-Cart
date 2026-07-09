@@ -11,6 +11,7 @@ Route::middleware(['auth', 'admin'])->group(function(){
     Route::get('product', [AdminController::class, 'product'])->name('product');
     Route::get('category', [AdminController::class, 'category'])->name('category');
     Route::get('orderPage', [AdminController::class, 'orderPage'])->name('orderPage');
+    Route::get('returns', [AdminController::class, 'returns'])->name('returns');
     Route::get('analytics', [AdminController::class, 'analytics'])->name('analytics');
     Route::get('coupon', [AdminController::class, 'coupon'])->name('coupon');
     Route::get('banner', [AdminController::class, 'banner'])->name('banner');

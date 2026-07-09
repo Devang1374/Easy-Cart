@@ -18,6 +18,11 @@ class orderTable extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     protected $fillable = [
         'user_id',
         'order_number',
@@ -43,5 +48,22 @@ class orderTable extends Model
         'coupon_id',
         'coupon_code',
         'discount_amount',
+
+        'return_requested',
+        'return_status',
+        'return_reason',
+        'return_admin_note',
+        'return_requested_at',
+        'return_completed_at',
+    ];
+
+    protected $casts = [
+        'return_requested'    => 'boolean',
+    
+        'return_requested_at' => 'datetime',
+        'return_completed_at' => 'datetime',
+    
+        'created_at'          => 'datetime',
+        'updated_at'          => 'datetime',
     ];
 }

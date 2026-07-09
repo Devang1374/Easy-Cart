@@ -29,4 +29,8 @@ class AdminController extends Controller
     public function banner(){
         return view('banner');
     }
+
+    public function returns(){
+        return view('returns');
+    }
 }
