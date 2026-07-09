@@ -123,12 +123,14 @@ new class extends Component {
                             </flux:button>
                         </a>
 
-                        @if ($order->pyment !== 'PAID' && $order->status != 'cancelled')
-                            <a href="{{ route('user/checkout', $order->id) }}">
-                                <flux:button variant="primary">
-                                    Pay Now
-                                </flux:button>
-                            </a>
+                        @if ($order->pyment !== 'Refunded' && $order->status != 'Returned')
+                            @if ($order->pyment !== 'PAID' && $order->status != 'cancelled')
+                                <a href="{{ route('user/checkout', $order->id) }}">
+                                    <flux:button variant="primary">
+                                        Pay Now
+                                    </flux:button>
+                                </a>
+                            @endif
                         @endif
 
                     </div>
