@@ -5,14 +5,20 @@ use Livewire\Component;
 use App\Models\orderTable;
 use Livewire\WithPagination;
 
+use Carbon\Carbon;
+
 new class extends Component {
     use WithPagination;
 
     public $status = 'all';
+
     public function getReturnOrdersProperty()
     {
         return OrderTable::with(['user', 'items.product.images'])
             ->where('return_requested', true)
+            ->when($this->startDate && $this->endDate, function ($query) {
+                $query->whereBetween('return_requested_at', [Carbon::parse($this->startDate)->startOfDay(), Carbon::parse($this->endDate)->endOfDay()]);
+            })
             ->when($this->search, function ($query) {
                 $query->where(function ($subQuery) {
                     // Search order table
@@ -27,6 +33,17 @@ new class extends Component {
             ->when($this->status !== 'all', fn($query) => $query->where('return_status', $this->status))
             ->latest('return_requested_at')
             ->paginate(10);
+    }
+
+    public $startDate;
+    public $endDate;
+    public function updatingStartDate()
+    {
+        $this->resetPage();
+    }
+    public function updatingEndDate()
+    {
+        $this->resetPage();
     }
 
     public function approve($id)
@@ -103,6 +120,12 @@ new class extends Component {
     {
         $this->resetPage();
     }
+
+    public ?DateRange $dateRange = null;
+    public function updatingDateRange()
+    {
+        $this->resetPage();
+    }
 };
 ?>
 
@@ -110,6 +133,17 @@ new class extends Component {
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="w-full sm:w-72">
             <flux:input wire:model.live="search" name="Search" type="text" placeholder="Search Categories..." />
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Start Date Input -->
+            <flux:input type="date" wire:model.live="startDate" label="From Date" />
+
+            <!-- Decorative Spacer/Arrow -->
+            <span class="text-gray-400 mt-5">to</span>
+
+            <!-- End Date Input -->
+            <flux:input type="date" wire:model.live="endDate" label="To Date" />
         </div>
 
         <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0">

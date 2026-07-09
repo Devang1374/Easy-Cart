@@ -11,8 +11,8 @@ use App\Models\orderTable;
 new class extends Component {
     use WithPagination;
 
+    
     public $status = 'all';
-
     #[Computed]
     public function orders()
     {
