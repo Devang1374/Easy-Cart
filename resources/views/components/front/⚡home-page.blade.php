@@ -213,11 +213,11 @@ new class extends Component {
                                     </div>
                                 @elseif($banner['background_type'] === 'image')
                                     <div class="absolute inset-0 bg-cover bg-center"
-                                        style="background-image:url('{{ asset('storage/' . $banner['background_image']) }}');">
+                                        style="background-image:url('{{ $banner['background_image'] }}');">
                                     </div>
                                 @elseif($banner['background_type'] === 'gradient-image')
                                     <div class="absolute inset-0 bg-cover bg-center"
-                                        style="background-image:url('{{ asset('storage/' . $banner['background_image']) }}');">
+                                        style="background-image:url('{{ $banner['background_image'] }}');">
                                     </div>
 
                                     <div class="absolute inset-0"
@@ -309,7 +309,7 @@ new class extends Component {
                                         </div>
 
                                         @if ($banner['desktop_image'])
-                                            <img src="{{ asset('storage/' . $banner['desktop_image']) }}"
+                                            <img src="{{ $banner['desktop_image'] }}"
                                                 alt="{{ $banner['title'] }}"
                                                 class="relative z-10 mx-auto max-h-[500px] max-w-full object-contain drop-shadow-[0_35px_60px_rgba(0,0,0,.45)] transition duration-500 hover:scale-105">
                                         @endif
@@ -357,7 +357,7 @@ new class extends Component {
                         class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100 transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-50 dark:bg-zinc-800 dark:group-hover:bg-blue-950/30">
 
                         @if ($category['image'])
-                            <img src="{{ asset('storage/' . $category['image']) }}" alt="{{ $category['name'] }}"
+                            <img src="{{ $category['image'] }}" alt="{{ $category['name'] }}"
                                 class="h-9 w-9 object-contain">
                         @else
                             <span class="text-2xl">
@@ -446,7 +446,7 @@ new class extends Component {
                                 </div>
 
                                 @if (isset($product['images'][0]))
-                                    <img src="{{ asset('storage/' . $product['images'][0]['image']) }}"
+                                    <img src="{{ $product['images'][0]['image'] }}"
                                         alt="{{ $product['name'] }}"
                                         class="h-72 w-full object-cover transition duration-700 group-hover:scale-110">
                                 @else
@@ -594,7 +594,7 @@ new class extends Component {
                         {{-- Image --}}
                         <div class="overflow-hidden">
                             @if (isset($product['images'][0]))
-                                <img src="{{ asset('storage/' . $product['images'][0]['image']) }}"
+                                <img src="{{ $product['images'][0]['image'] }}"
                                     alt="{{ $product['name'] }}"
                                     class="h-64 w-full object-cover transition duration-500 group-hover:scale-105">
                             @endif
