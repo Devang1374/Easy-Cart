@@ -4,7 +4,7 @@ use Livewire\Component;
 
 // all database models that is used
 use App\Models\Category;
-use App\Models\Product;
+use App\Models\product;
 use App\Models\Wishlist;
 use App\Models\Banner;
 
@@ -32,7 +32,7 @@ new class extends Component {
 
         $this->latestProducts = $this->getLatestProducts();
         Cache::remember('hero_latest_products', now()->addHours(12), function () {
-            return Product::query()
+            return product::query()
                 ->with('images')
                 ->with('images')
                 ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
