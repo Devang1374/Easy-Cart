@@ -4,9 +4,11 @@ use Livewire\Component;
 
 // all database models that is used
 use App\Models\Category;
-use App\Models\product;
+use App\Models\Product;
 use App\Models\Wishlist;
 use App\Models\Banner;
+
+use Illuminate\Support\Facades\Cache;
 
 new class extends Component {
     public $categories;
@@ -16,38 +18,76 @@ new class extends Component {
     // get the hero Banners from database
     public function getHeroBannersProperty()
     {
-        return Banner::active()->where('position', 'hero')->orderBy('sort_order')->get();
+        return Cache::remember('hero_banners', now()->addHours(12), function () {
+            return Banner::active()->where('position', 'hero')->orderBy('sort_order')->get()->toArray();
+        });
     }
 
     // mount the initial products and categories
     public function mount()
     {
-        $this->categories = Category::query()->where('is_active', true)->latest()->take(8)->get();
+        $this->categories = $this->getCategories();
 
-        $this->featuredProducts = product::query()
-            ->with('images')
-            ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
-            ->withCount(['approvedReviews as total_reviews'])
-            ->where('is_active', true)
-            ->where('featured', true)
-            ->latest()
-            ->take(8)
-            ->get();
+        $this->featuredProducts = $this->getFeaturedProducts();
 
-        $this->latestProducts = product::query()
-            ->with('images')
-            ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
-            ->withCount(['approvedReviews as total_reviews'])
-            ->where('is_active', true)
-            ->latest()
-            ->take(8)
-            ->get();
+        $this->latestProducts = $this->getLatestProducts();
+        Cache::remember('hero_latest_products', now()->addHours(12), function () {
+            return Product::query()
+                ->with('images')
+                ->with('images')
+                ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
+                ->withCount(['approvedReviews as total_reviews'])
+                ->where('is_active', true)
+                ->latest()
+                ->take(8)
+                ->get()
+                ->toArray();
+        });
 
         if (auth()->check()) {
             $this->wishlist = Wishlist::where('user_id', auth()->id())
                 ->pluck('product_id')
                 ->toArray();
         }
+    }
+
+    public function getCategories()
+    {
+        return Cache::remember('hero_categories', now()->addHours(12), function () {
+            return Category::query()->where('is_active', true)->latest()->take(8)->get()->toArray();
+        });
+    }
+
+    public function getFeaturedProducts()
+    {
+        return Cache::remember('hero_featured_products', now()->addHours(12), function () {
+            return Product::query()
+                ->with('images')
+                ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
+                ->withCount(['approvedReviews as total_reviews'])
+                ->where('is_active', true)
+                ->where('featured', true)
+                ->latest()
+                ->take(8)
+                ->get()
+                ->toArray();
+        });
+    }
+
+    public function getLatestProducts()
+    {
+        return Cache::remember('hero_latest_products', now()->addHours(12), function () {
+            return Product::query()
+                ->with('images')
+                ->with('images')
+                ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
+                ->withCount(['approvedReviews as total_reviews'])
+                ->where('is_active', true)
+                ->latest()
+                ->take(8)
+                ->get()
+                ->toArray();
+        });
     }
 
     // add and remove product from whishlist
@@ -58,7 +98,7 @@ new class extends Component {
             return redirect()->route('login');
         }
 
-        $wishlist = Wishlist::where('user_id', auth()->id())->where('product_id', $productId);
+        $wishlist = Wishlist::where('user_id', auth()['id']())->where('product_id', $productId);
 
         if ($wishlist->exists()) {
             $wishlist->delete();
@@ -70,7 +110,7 @@ new class extends Component {
             $this->dispatch('wishlist-updated');
         } else {
             Wishlist::create([
-                'user_id' => auth()->id(),
+                'user_id' => auth()['id'](),
                 'product_id' => $productId,
             ]);
 
@@ -155,40 +195,42 @@ new class extends Component {
                     {{-- Dynamic Banners --}}
                     @foreach ($this->heroBanners as $banner)
                         <div class="absolute top-4 left-4 z-50 text-white bg-black/50 px-2 py-1 rounded">
-                            {{ $banner->background_type }}
+                            {{ $banner['background_type'] }}
                             <br>
-                            {{ $banner->background_color }}
+                            {{ $banner['background_color'] }}
                         </div>
                         <li class="splide__slide">
 
                             <section class="relative overflow-hidden min-h-[700px]">
 
                                 {{-- Background --}}
-                                @if ($banner->background_type === 'gradient')
+                                @if ($banner['background_type'] === 'gradient')
                                     <div class="absolute inset-0"
-                                        style="background:linear-gradient(135deg, {{ $banner->background_color }}, #0f172a);">
+                                        style="background:linear-gradient(135deg, {{ $banner['background_color'] }}, #0f172a);">
                                     </div>
-                                @elseif($banner->background_type === 'solid')
-                                    <div class="absolute inset-0" style="background:{{ $banner->background_color }};">
+                                @elseif($banner['background_type'] === 'solid')
+                                    <div class="absolute inset-0" style="background:{{ $banner['background_color'] }};">
                                     </div>
-                                @elseif($banner->background_type === 'image')
+                                @elseif($banner['background_type'] === 'image')
                                     <div class="absolute inset-0 bg-cover bg-center"
-                                        style="background-image:url('{{ $banner->background_image }}');"></div>
-                                @elseif($banner->background_type === 'gradient-image')
+                                        style="background-image:url('{{ asset('storage/' . $banner['background_image']) }}');">
+                                    </div>
+                                @elseif($banner['background_type'] === 'gradient-image')
                                     <div class="absolute inset-0 bg-cover bg-center"
-                                        style="background-image:url('{{ $banner->background_image }}');"></div>
+                                        style="background-image:url('{{ asset('storage/' . $banner['background_image']) }}');">
+                                    </div>
 
                                     <div class="absolute inset-0"
-                                        style="background:linear-gradient(135deg, {{ $banner->background_color }}cc, rgba(15,23,42,.75));">
+                                        style="background:linear-gradient(135deg, {{ $banner['background_color'] }}cc, rgba(15,23,42,.75));">
                                     </div>
                                 @endif
 
                                 {{-- Background Effects --}}
                                 <div class="absolute inset-0 overflow-hidden pointer-events-none">
 
-                                    @if (in_array($banner->background_type, ['gradient', 'solid', 'gradient-image']))
+                                    @if (in_array($banner['background_type'], ['gradient', 'solid', 'gradient-image']))
                                         <div class="absolute -top-40 -left-40 h-[32rem] w-[32rem] rounded-full opacity-20 blur-[140px]"
-                                            style="background: {{ $banner->background_color }};"></div>
+                                            style="background: {{ $banner['background_color'] }};"></div>
                                     @endif
 
                                     <div
@@ -203,36 +245,36 @@ new class extends Component {
                                     {{-- LEFT --}}
                                     <div class="z-10">
 
-                                        @if ($banner->subtitle)
+                                        @if ($banner['subtitle'])
                                             <span
                                                 class="inline-flex rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-medium text-white backdrop-blur">
-                                                {{ $banner->subtitle }}
+                                                {{ $banner['subtitle'] }}
                                             </span>
                                         @endif
 
                                         <h1 class="mt-6 text-5xl font-black leading-tight text-white lg:text-7xl">
-                                            {{ $banner->title }}
+                                            {{ $banner['title'] }}
                                         </h1>
 
-                                        @if ($banner->description)
+                                        @if (!empty($banner['description']))
                                             <p class="mt-8 max-w-xl text-lg leading-8 text-white/80">
-                                                {{ $banner->description }}
+                                                {{ $banner['description'] }}
                                             </p>
                                         @endif
 
                                         <div class="mt-10 flex flex-wrap gap-4">
 
-                                            @if ($banner->button_text)
-                                                <a href="{{ $banner->button_link }}"
+                                            @if ($banner['button_text'])
+                                                <a href="{{ $banner['button_link'] }}"
                                                     class="rounded-xl bg-white px-8 py-4 font-semibold text-black transition duration-300 hover:scale-105">
-                                                    {{ $banner->button_text }}
+                                                    {{ $banner['button_text'] }}
                                                 </a>
                                             @endif
 
-                                            @if ($banner->secondary_button_text)
-                                                <a href="{{ $banner->secondary_button_link }}"
+                                            @if ($banner['secondary_button_text'])
+                                                <a href="{{ $banner['secondary_button_link'] }}"
                                                     class="rounded-xl border border-white/20 bg-white/5 px-8 py-4 font-semibold text-white backdrop-blur transition hover:bg-white/10">
-                                                    {{ $banner->secondary_button_text }}
+                                                    {{ $banner['secondary_button_text'] }}
                                                 </a>
                                             @endif
 
@@ -266,8 +308,9 @@ new class extends Component {
                                         <div class="absolute h-[38rem] w-[38rem] rounded-full border border-white/10">
                                         </div>
 
-                                        @if ($banner->desktop_image)
-                                            <img src="{{ $banner->desktop_image }}" alt="{{ $banner->title }}"
+                                        @if ($banner['desktop_image'])
+                                            <img src="{{ asset('storage/' . $banner['desktop_image']) }}"
+                                                alt="{{ $banner['title'] }}"
                                                 class="relative z-10 mx-auto max-h-[500px] max-w-full object-contain drop-shadow-[0_35px_60px_rgba(0,0,0,.45)] transition duration-500 hover:scale-105">
                                         @endif
 
@@ -313,8 +356,8 @@ new class extends Component {
                     <div
                         class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100 transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-50 dark:bg-zinc-800 dark:group-hover:bg-blue-950/30">
 
-                        @if ($category->image)
-                            <img src="{{ $category->image }}" alt="{{ $category->name }}"
+                        @if ($category['image'])
+                            <img src="{{ asset('storage/' . $category['image']) }}" alt="{{ $category['name'] }}"
                                 class="h-9 w-9 object-contain">
                         @else
                             <span class="text-2xl">
@@ -324,7 +367,7 @@ new class extends Component {
 
                     </div>
                     <h3 class="font-semibold transition group-hover:text-blue-600">
-                        {{ $category->name }}
+                        {{ $category['name'] }}
                     </h3>
                 </a>
             @endforeach
@@ -370,9 +413,9 @@ new class extends Component {
                         class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)] dark:border-zinc-800 dark:bg-zinc-900">
 
                         {{-- Wishlist Button --}}
-                        <button type="button" wire:click="toggleWishlist({{ $product->id }})"
+                        <button type="button" wire:click="toggleWishlist({{ $product['id'] }})"
                             class="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 shadow transition hover:scale-110 dark:bg-zinc-900/90">
-                            @if (in_array($product->id, $wishlist))
+                            @if (in_array($product['id'], $wishlist))
                                 {{-- Filled Heart --}}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-red-500 text-red-500"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -389,7 +432,7 @@ new class extends Component {
                             @endif
                         </button>
 
-                        <a href="{{ route('user/productDetails', $product->slug) }}" wire:navigate class="block">
+                        <a href="{{ route('user/productDetails', $product['slug']) }}" wire:navigate class="block">
 
                             {{-- Product Image --}}
                             <div class="relative overflow-hidden">
@@ -402,8 +445,9 @@ new class extends Component {
                                     </span>
                                 </div>
 
-                                @if (isset($product->images[0]))
-                                    <img src="{{ $product->images[0]->image }}" alt="{{ $product->name }}"
+                                @if (isset($product['images'][0]))
+                                    <img src="{{ asset('storage/' . $product['images'][0]['image']) }}"
+                                        alt="{{ $product['name'] }}"
                                         class="h-72 w-full object-cover transition duration-700 group-hover:scale-110">
                                 @else
                                     <div class="flex h-72 items-center justify-center bg-zinc-100 dark:bg-zinc-800">
@@ -435,7 +479,7 @@ new class extends Component {
                             <div class="p-6">
 
                                 <h3 class="line-clamp-2 text-lg font-bold tracking-tight">
-                                    {{ $product->name }}
+                                    {{ $product['name'] }}
                                 </h3>
 
                                 {{-- product average rating --}}
@@ -444,7 +488,7 @@ new class extends Component {
                                     <div class="flex text-amber-400 text-sm">
 
                                         @for ($i = 1; $i <= 5; $i++)
-                                            @if ($i <= round($product->average_rating ?? 0))
+                                            @if ($i <= round($product['average_rating'] ?? 0))
                                                 ★
                                             @else
                                                 ☆
@@ -454,11 +498,11 @@ new class extends Component {
                                     </div>
 
                                     <span class="text-sm font-medium">
-                                        {{ number_format($product->average_rating ?? 0, 1) }}
+                                        {{ number_format($product['average_rating'] ?? 0, 1) }}
                                     </span>
 
                                     <span class="text-sm text-zinc-500">
-                                        ({{ $product->total_reviews ?? 0 }})
+                                        ({{ $product['total_reviews'] ?? 0 }})
                                     </span>
 
                                 </div>
@@ -471,11 +515,11 @@ new class extends Component {
                                         </p>
 
                                         <p class="text-2xl font-black text-blue-600 dark:text-blue-400">
-                                            ₹{{ number_format($product->price, 2) }}
+                                            ₹{{ number_format($product['price'], 2) }}
                                         </p>
                                     </div>
 
-                                    @if ($product->stock > 0)
+                                    @if ($product['stock'] > 0)
                                         <span
                                             class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                             In Stock
@@ -526,9 +570,9 @@ new class extends Component {
                     class="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
 
                     {{-- Wishlist Button --}}
-                    <button type="button" wire:click="toggleWishlist({{ $product->id }})"
+                    <button type="button" wire:click="toggleWishlist({{ $product['id'] }})"
                         class="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 shadow transition hover:scale-110 dark:bg-zinc-900/90">
-                        @if (in_array($product->id, $wishlist))
+                        @if (in_array($product['id'], $wishlist))
                             {{-- Filled Heart --}}
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-red-500 text-red-500"
                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -546,11 +590,12 @@ new class extends Component {
                     </button>
 
                     {{-- Product Link --}}
-                    <a href="{{ route('user/productDetails', $product->slug) }}" wire:navigate class="block">
+                    <a href="{{ route('user/productDetails', $product['slug']) }}" wire:navigate class="block">
                         {{-- Image --}}
                         <div class="overflow-hidden">
-                            @if (isset($product->images[0]))
-                                <img src="{{ $product->images[0]->image }}" alt="{{ $product->name }}"
+                            @if (isset($product['images'][0]))
+                                <img src="{{ asset('storage/' . $product['images'][0]['image']) }}"
+                                    alt="{{ $product['name'] }}"
                                     class="h-64 w-full object-cover transition duration-500 group-hover:scale-105">
                             @endif
                         </div>
@@ -558,11 +603,11 @@ new class extends Component {
                         {{-- Content --}}
                         <div class="p-5">
                             <p class="text-xs uppercase tracking-wider text-zinc-500">
-                                {{ $product->category->name ?? 'Category' }}
+                                {{ $product['category']['name'] ?? 'Category' }}
                             </p>
 
                             <h3 class="mt-2 line-clamp-2 font-bold">
-                                {{ $product->name }}
+                                {{ $product['name'] }}
                             </h3>
 
                             {{-- product average rating --}}
@@ -571,7 +616,7 @@ new class extends Component {
                                 <div class="flex text-amber-400 text-sm">
 
                                     @for ($i = 1; $i <= 5; $i++)
-                                        @if ($i <= round($product->average_rating ?? 0))
+                                        @if ($i <= round($product['average_rating'] ?? 0))
                                             ★
                                         @else
                                             ☆
@@ -581,21 +626,21 @@ new class extends Component {
                                 </div>
 
                                 <span class="text-sm font-medium">
-                                    {{ number_format($product->average_rating ?? 0, 1) }}
+                                    {{ number_format($product['average_rating'] ?? 0, 1) }}
                                 </span>
 
                                 <span class="text-sm text-zinc-500">
-                                    ({{ $product->total_reviews ?? 0 }})
+                                    ({{ $product['total_reviews'] ?? 0 }})
                                 </span>
 
                             </div>
 
                             <div class="mt-4 flex items-center justify-between">
                                 <span class="text-xl font-black text-blue-600 dark:text-blue-400">
-                                    ₹{{ number_format($product->price, 2) }}
+                                    ₹{{ number_format($product['price'], 2) }}
                                 </span>
 
-                                @if ($product->stock > 0)
+                                @if ($product['stock'] > 0)
                                     <span class="text-xs text-green-600">
                                         In Stock
                                     </span>
