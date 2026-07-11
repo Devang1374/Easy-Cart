@@ -98,7 +98,7 @@ new class extends Component {
             return redirect()->route('login');
         }
 
-        $wishlist = Wishlist::where('user_id', auth()['id']())->where('product_id', $productId);
+        $wishlist = Wishlist::where('user_id', auth()->id())->where('product_id', $productId);
 
         if ($wishlist->exists()) {
             $wishlist->delete();
@@ -110,7 +110,7 @@ new class extends Component {
             $this->dispatch('wishlist-updated');
         } else {
             Wishlist::create([
-                'user_id' => auth()['id'](),
+                'user_id' => auth()->id(),
                 'product_id' => $productId,
             ]);
 
