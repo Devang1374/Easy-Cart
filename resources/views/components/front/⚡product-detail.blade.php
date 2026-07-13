@@ -232,7 +232,7 @@ new class extends Component {
 
     </section>
 
-    @if ($relatedProducts)
+    @if (!empty($relatedProducts))
         <section class="mt-20">
 
             <div class="mb-8">
