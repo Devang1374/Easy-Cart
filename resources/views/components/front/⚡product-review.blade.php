@@ -9,8 +9,7 @@ use App\Models\orderItems;
 
 use App\Services\CloudinaryService;
 
-new class extends Component
-{
+new class extends Component {
     use WithFileUploads;
 
     public product $product;
@@ -60,9 +59,7 @@ new class extends Component
             return 0;
         }
 
-        return round(
-            (($this->ratingBreakdown[$stars] ?? 0) / $this->totalReviews) * 100
-        );
+        return round((($this->ratingBreakdown[$stars] ?? 0) / $this->totalReviews) * 100);
     }
 
     public $images = [];
@@ -72,16 +69,16 @@ new class extends Component
     public bool $showReviewForm = false;
     public function toggleReviewForm()
     {
-        if (! $this->canReview) {
+        if (!$this->canReview) {
             return;
         }
 
-        $this->showReviewForm = ! $this->showReviewForm;
+        $this->showReviewForm = !$this->showReviewForm;
     }
 
     public function submitReview()
     {
-        if (! $this->canReview) {
+        if (!$this->canReview) {
             return;
         }
 
@@ -100,10 +97,8 @@ new class extends Component
         ]);
 
         if (!empty($this->images)) {
-
             foreach ($this->images as $image) {
-                $upload = app(CloudinaryService::class)
-                    ->upload($image, 'easycart/reviews');
+                $upload = app(CloudinaryService::class)->upload($image, 'easycart/reviews');
 
                 $path = $upload['secure_url'];
                 $publicId = $upload['public_id'];
@@ -112,25 +107,14 @@ new class extends Component
                     'image' => $path,
                     'image_id' => $publicId,
                 ]);
-
             }
-
         }
 
-        $this->reset([
-            'rating',
-            'title',
-            'comment',
-            'images',
-            'showReviewForm',
-        ]);
+        $this->reset(['rating', 'title', 'comment', 'images', 'showReviewForm']);
 
         $this->product->refresh();
 
-        Flux::toast(
-            heading: 'Thank you!',
-            text: 'Your review has been submitted.'
-        );
+        Flux::toast(heading: 'Thank you!', text: 'Your review has been submitted.');
     }
 
     protected function rules()
@@ -184,8 +168,7 @@ new class extends Component
             {{-- Right --}}
             <div class="space-y-4">
 
-                @for($i = 5; $i >= 1; $i--)
-
+                @for ($i = 5; $i >= 1; $i--)
                     <div class="flex items-center gap-4">
 
                         <span class="w-8 text-sm font-medium">
@@ -194,10 +177,8 @@ new class extends Component
 
                         <div class="h-2 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
 
-                            <div
-                                class="h-full rounded-full bg-yellow-400"
-                                style="width: {{ $this->ratingPercentage($i) }}%;"
-                            ></div>
+                            <div class="h-full rounded-full bg-yellow-400"
+                                style="width: {{ $this->ratingPercentage($i) }}%;"></div>
 
                         </div>
 
@@ -206,14 +187,13 @@ new class extends Component
                         </span>
 
                     </div>
-
                 @endfor
 
             </div>
 
         </div>
 
-        @if($this->canReview)
+        @if ($this->canReview)
             <div class="mt-10 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
 
                 <div class="flex items-center justify-between">
@@ -230,23 +210,19 @@ new class extends Component
 
                     </div>
 
-                    <flux:button
-                        wire:click="toggleReviewForm"
-                        variant="primary"
-                    >
+                    <flux:button wire:click="toggleReviewForm" variant="primary">
                         {{ $showReviewForm ? 'Close' : 'Write Review' }}
                     </flux:button>
 
                 </div>
 
             </div>
-
         @endif
 
-        @if($showReviewForm)
+        @if ($showReviewForm)
 
             <div class="mt-6 rounded-3xl border border-zinc-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
-            
+
                 <form wire:submit="submitReview" class="space-y-6">
 
                     {{-- Rating --}}
@@ -256,29 +232,20 @@ new class extends Component
                             Rating
                         </label>
 
-                <div
-                    class="flex gap-1 text-4xl"
-                    x-data="{ hover: @entangle('hoverRating') }"
-                >
+                        <div class="flex gap-1 text-4xl" x-data="{ hover: @entangle('hoverRating') }">
 
-                    @for($i = 1; $i <= 5; $i++)
+                            @for ($i = 1; $i <= 5; $i++)
+                                <button type="button" wire:click="$set('rating', {{ $i }})"
+                                    x-on:mouseenter="hover={{ $i }}" x-on:mouseleave="hover=0"
+                                    class="transition duration-200 hover:scale-125"
+                                    :class="(hover >= {{ $i }} || {{ $rating }} >= {{ $i }}) ?
+                                    'text-yellow-400' :
+                                    'text-zinc-300'">
+                                    ★
+                                </button>
+                            @endfor
 
-                        <button
-                            type="button"
-                            wire:click="$set('rating', {{ $i }})"
-                            x-on:mouseenter="hover={{ $i }}"
-                            x-on:mouseleave="hover=0"
-                            class="transition duration-200 hover:scale-125"
-                            :class="(hover >= {{ $i }} || {{ $rating }} >= {{ $i }})
-                                ? 'text-yellow-400'
-                                : 'text-zinc-300'"
-                        >
-                            ★
-                        </button>
-
-                    @endfor
-
-                </div>
+                        </div>
 
                         @error('rating')
                             <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
@@ -286,53 +253,55 @@ new class extends Component
 
                     </div>
 
-                    <flux:input
-                        wire:model="title"
-                        label="Review Title"
-                        placeholder="Amazing product"
-                    />
+                    <flux:input wire:model="title" label="Review Title" placeholder="Amazing product" />
 
-                    <flux:textarea
-                        wire:model="comment"
-                        label="Your Review"
-                        rows="5"
-                    />
+                    <flux:textarea wire:model="comment" label="Your Review" rows="5" />
 
-                    <flux:input
-                        wire:model="images"
-                        type="file"
-                        multiple
-                        label="Photos (optional)"
-                    />
 
-                    @if($images)
+                    <div x-data="{ isUploading: false, progress: 0 }" x-on:livewire-upload-start="isUploading = true; progress = 0"
+                        x-on:livewire-upload-finish="isUploading = false"
+                        x-on:livewire-upload-error="isUploading = false"
+                        x-on:livewire-upload-progress="progress = $event.detail.progress" class="space-y-3">
+                        <!-- Base Flux Input -->
+                        <flux:input wire:model="images" type="file" multiple label="Photos (optional)" />
+
+                        <!-- Reactive Progress Bar Wrapper -->
+                        <div x-show="isUploading" x-collapse x-cloak class="space-y-1.5">
+                            <div
+                                class="flex justify-between items-center text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                                <span>{{ __('Uploading file...') }}</span>
+                                <span x-text="progress + '%'">0%</span>
+                            </div>
+
+                            <!-- Progress Bar Track -->
+                            <div class="w-full bg-zinc-200/60 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                                <!-- Progress Bar Fill (Matches Flux Accent Color) -->
+                                <div class="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-150 ease-out"
+                                    :style="`width: ${progress}%`"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($images)
 
                         <div class="flex flex-wrap gap-3">
 
-                            @foreach($images as $image)
-
-                                <img
-                                    src="{{ $image->temporaryUrl() }}"
-                                    class="h-24 w-24 rounded-xl object-cover"
-                                >
-
+                            @foreach ($images as $image)
+                                <img src="{{ $image->temporaryUrl() }}" class="h-24 w-24 rounded-xl object-cover">
                             @endforeach
 
                         </div>
 
                     @endif
 
-                    <flux:button
-                        type="submit"
-                        variant="primary"
-                    >
+                    <flux:button type="submit" variant="primary">
                         Submit Review
                     </flux:button>
 
                 </form>
-            
+
             </div>
-            
+
         @endif
 
         <div class="mt-12 space-y-6">
@@ -351,7 +320,8 @@ new class extends Component
                                     {{ $review->user->name }}
                                 </h4>
 
-                                <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                <span
+                                    class="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                     ✓ Verified Purchase
                                 </span>
 
@@ -361,10 +331,8 @@ new class extends Component
 
                                 <div class="text-yellow-400">
 
-                                    @for($i = 1; $i <= 5; $i++)
-
+                                    @for ($i = 1; $i <= 5; $i++)
                                         {{ $i <= $review->rating ? '★' : '☆' }}
-
                                     @endfor
 
                                 </div>
@@ -387,21 +355,15 @@ new class extends Component
                         {{ $review->comment }}
                     </p>
 
-                    @if($review->images->count())
-
+                    @if ($review->images->count())
                         <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
 
-                            @foreach($review->images as $image)
-
-                                <img
-                                    src="{{ $image->image }}"
-                                    class="aspect-square w-full cursor-pointer rounded-2xl object-cover transition duration-300 hover:scale-105 hover:shadow-lg"
-                                >
-
+                            @foreach ($review->images as $image)
+                                <img src="{{ $image->image }}"
+                                    class="aspect-square w-full cursor-pointer rounded-2xl object-cover transition duration-300 hover:scale-105 hover:shadow-lg">
                             @endforeach
 
                         </div>
-
                     @endif
 
                 </div>
