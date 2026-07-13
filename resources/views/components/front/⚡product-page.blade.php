@@ -258,7 +258,7 @@ new class extends Component {
                                         <div class="flex text-amber-400 text-sm">
 
                                             @for ($i = 1; $i <= 5; $i++)
-                                                @if ($i <= round($product->average_rating ?? 0))
+                                                @if ($i <= round($product->averageRating() ?? 0))
                                                     ★
                                                 @else
                                                     ☆
@@ -268,11 +268,11 @@ new class extends Component {
                                         </div>
 
                                         <span class="text-sm font-medium">
-                                            {{ number_format($product->average_rating ?? 0, 1) }}
+                                            {{ number_format($product->averageRating() ?? 0, 1) }}
                                         </span>
 
                                         <span class="text-sm text-zinc-500">
-                                            ({{ $product->total_reviews ?? 0 }})
+                                            ({{ $product->totalReviews() ?? 0 }})
                                         </span>
 
                                     </div>
