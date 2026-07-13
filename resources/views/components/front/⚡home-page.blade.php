@@ -31,18 +31,6 @@ new class extends Component {
         $this->featuredProducts = $this->getFeaturedProducts();
 
         $this->latestProducts = $this->getLatestProducts();
-        Cache::remember('hero_latest_products', now()->addHours(12), function () {
-            return product::query()
-                ->with('images')
-                ->with('images')
-                ->withAvg(['approvedReviews as average_rating' => function ($query) {}], 'rating')
-                ->withCount(['approvedReviews as total_reviews'])
-                ->where('is_active', true)
-                ->latest()
-                ->take(8)
-                ->get()
-                ->toArray();
-        });
 
         if (auth()->check()) {
             $this->wishlist = Wishlist::where('user_id', auth()->id())

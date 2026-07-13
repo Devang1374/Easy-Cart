@@ -8,6 +8,8 @@ use App\Models\product;
 
 use App\Services\CloudinaryService;
 
+use App\Support\ClearCache;
+
 new class extends Component
 {
     use WithFileUploads;
@@ -102,6 +104,7 @@ new class extends Component
             }
         }
 
+        ClearCache::clearProduct();
         $this->dispatch("product-updated");
         $this->dispatch("send-message", message:"Product Save Successfully");
         
@@ -147,6 +150,7 @@ new class extends Component
                 "featured" => $this->featured,
             ]); 
 
+            ClearCache::clearProduct();
             $this->dispatch("product-updated");
             $this->dispatch("send-message", message:"Product Update Successfully");
         }

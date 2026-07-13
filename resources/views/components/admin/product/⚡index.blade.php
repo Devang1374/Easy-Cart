@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Services\CloudinaryService;
 
+use App\Support\ClearCache;
+
 new class extends Component
 {
     use WithPagination;
@@ -82,6 +84,7 @@ new class extends Component
         }
 
         product::where('id', $id)->delete();
+        ClearCache::clearProduct();
         $this->message = "Product Deleted Successfully";
     }
 };

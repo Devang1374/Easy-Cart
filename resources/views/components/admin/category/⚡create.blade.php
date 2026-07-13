@@ -10,6 +10,8 @@ use App\Models\Category;
 
 use App\Services\CloudinaryService;
 
+use App\Support\ClearCache;
+
 new class extends Component
 {
     use WithFileUploads;
@@ -65,6 +67,7 @@ new class extends Component
                 "is_active" => $this->active,
             ]);
 
+            ClearCache::clearCategory();
             $this->dispatch("category-updated");
             $this->dispatch("send-message", message:"Category Created Successfully");
         }else{
@@ -90,6 +93,7 @@ new class extends Component
                 "is_active" => $this->active,
             ]);
 
+            ClearCache::clearCategory();
             $this->reset(['title', 'slug', 'image']);
             $this->dispatch("category-updated");
             $this->dispatch("send-message", message:"Category Updated Successfully");

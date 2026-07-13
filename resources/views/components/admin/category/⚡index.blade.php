@@ -10,6 +10,8 @@ use App\Models\Category;
 
 use App\Services\CloudinaryService;
 
+use App\Support\ClearCache;
+
 new class extends Component
 {
     use WithPagination;
@@ -53,7 +55,7 @@ new class extends Component
                     ->destroy($category->image_id);
 
         $category->delete();
-
+        ClearCache::clearCategory();
         $this->message = "Category Deleted Successfully";
     }
 };
